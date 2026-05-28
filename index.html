@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <!--
   RAM index — LAAPOA Retiree Associate Membership Portal (member-facing)
-  Version: 1.00
+  Version: 1.01
   Backend: ram-api.shortadrs.com
+  Changelog 1.01: logo in navy block, arched LAAPOA crest, title/subtitle update,
+    time-of-day greeting, Announcements tab (announcements + YouTube + birthday board
+    with confetti, 04:30-12:00 window), Bulletin board tab (open add/edit/delete),
+    enrollment birthday field (required), profile birthday opt-out.
 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LAAPOA RAM Portal — Retiree Associate Membership</title>
+<title>LAAPOA RAM Portal — Retired Associate Member</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -32,44 +36,34 @@
       radial-gradient(900px 500px at 85% -10%, rgba(200,162,74,.10), transparent 60%),
       radial-gradient(800px 600px at -10% 110%, rgba(19,53,95,.10), transparent 55%);
   }
-  .wrap{max-width:640px;margin:0 auto;padding:32px 20px 64px}
+  .wrap{max-width:660px;margin:0 auto;padding:32px 20px 64px}
   .topbar{display:flex;align-items:center;gap:14px;margin-bottom:28px}
-  .crest{
-    width:46px;height:46px;border-radius:50%;flex:none;
-    background:radial-gradient(circle at 35% 30%, var(--navy-2), var(--navy));
-    border:2px solid var(--gold);display:grid;place-items:center;
-    color:var(--gold);font-family:'Fraunces',serif;font-weight:700;font-size:18px;
-    box-shadow:var(--shadow-sm);
-  }
-  .brand h1{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--navy);letter-spacing:-.01em}
-  .brand p{font-size:12px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
-  .card{
-    background:var(--white);border:1px solid var(--line);border-radius:var(--r);
-    box-shadow:var(--shadow);overflow:hidden;
-  }
-  .card-head{
-    background:linear-gradient(135deg,var(--navy),var(--navy-2));color:#fff;padding:24px 26px;
-    position:relative;
-  }
-  .card-head::after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;
-    background:linear-gradient(90deg,var(--gold),var(--gold-soft),var(--gold))}
+  .crest{width:52px;height:52px;flex:none;position:relative}
+  .crest svg{display:block;width:100%;height:100%}
+  .brand h1{font-family:'Fraunces',serif;font-size:21px;font-weight:600;color:var(--navy);letter-spacing:-.01em}
+  .brand p{font-size:12px;color:var(--muted);letter-spacing:.03em}
+  .card{background:var(--white);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+  .card-head{background:linear-gradient(135deg,var(--navy),var(--navy-2));color:#fff;padding:24px 26px;position:relative}
+  .card-head::after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold-soft),var(--gold))}
+  .card-head .logo-corner{position:absolute;top:14px;left:18px;width:42px;height:42px;display:grid;place-items:center}
+  .card-head .logo-corner img{max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 1px 3px rgba(0,0,0,.35))}
+  .card-head .logo-fallback{font-family:'Fraunces',serif;font-weight:700;font-size:13px;color:var(--gold);letter-spacing:.05em}
+  .card-head.with-logo{padding-left:74px}
   .card-head h2{font-family:'Fraunces',serif;font-weight:600;font-size:22px}
   .card-head p{font-size:13px;opacity:.82;margin-top:3px}
   .card-body{padding:26px}
   label{display:block;font-size:13px;font-weight:600;color:var(--navy);margin:0 0 6px}
   .hint{font-size:12px;color:var(--muted);margin:-2px 0 14px}
-  input,select{
-    width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;
-    font-family:inherit;font-size:15px;color:var(--ink);background:#fcfdff;transition:.15s;
-  }
-  input:focus,select:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,162,74,.18)}
+  input,select,textarea{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:15px;color:var(--ink);background:#fcfdff;transition:.15s}
+  textarea{resize:vertical;min-height:90px}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,162,74,.18)}
   .field{margin-bottom:16px}
   .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   @media(max-width:480px){.row{grid-template-columns:1fr}}
-  .btn{
-    width:100%;padding:13px 18px;border:none;border-radius:10px;cursor:pointer;
-    font-family:'Archivo',sans-serif;font-size:15px;font-weight:600;transition:.15s;
-  }
+  .check{display:flex;align-items:flex-start;gap:9px;margin-bottom:16px}
+  .check input{width:auto;margin-top:3px}
+  .check label{margin:0;font-weight:500;color:var(--ink);font-size:14px}
+  .btn{width:100%;padding:13px 18px;border:none;border-radius:10px;cursor:pointer;font-family:'Archivo',sans-serif;font-size:15px;font-weight:600;transition:.15s}
   .btn-primary{background:var(--navy);color:#fff}
   .btn-primary:hover{background:var(--navy-2)}
   .btn-primary:disabled{opacity:.55;cursor:not-allowed}
@@ -77,11 +71,11 @@
   .btn-gold:hover{background:var(--gold-soft)}
   .btn-ghost{background:transparent;color:var(--navy);border:1.5px solid var(--line)}
   .btn-ghost:hover{border-color:var(--navy)}
+  .btn-sm{width:auto;padding:7px 14px;font-size:13px}
+  .btn-danger{background:transparent;color:var(--err);border:1.5px solid var(--err-bg)}
+  .btn-danger:hover{background:var(--err-bg)}
   .btn + .btn{margin-top:10px}
-  .code-input{
-    letter-spacing:10px;text-align:center;font-size:26px;font-weight:700;
-    font-family:'Fraunces',serif;color:var(--navy);
-  }
+  .code-input{letter-spacing:10px;text-align:center;font-size:26px;font-weight:700;font-family:'Fraunces',serif;color:var(--navy)}
   .msg{padding:12px 14px;border-radius:10px;font-size:13.5px;margin-bottom:16px;display:none}
   .msg.show{display:block}
   .msg.ok{background:var(--ok-bg);color:var(--ok)}
@@ -91,51 +85,69 @@
   .center{text-align:center}
   .mt{margin-top:16px}
   .hide{display:none!important}
-  .spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.4);
-    border-top-color:#fff;border-radius:50%;animation:s .7s linear infinite;vertical-align:-2px;margin-right:7px}
+  .spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:s .7s linear infinite;vertical-align:-2px;margin-right:7px}
   @keyframes s{to{transform:rotate(360deg)}}
-  /* dashboard */
   .dash-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
-  .pill{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
-    padding:3px 10px;border-radius:20px;background:var(--ok-bg);color:var(--ok)}
-  .tabs{display:flex;gap:4px;margin:22px 0 4px;border-bottom:1px solid var(--line)}
-  .tab{padding:10px 16px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;
-    border:none;background:none;font-family:inherit;border-bottom:2.5px solid transparent;margin-bottom:-1px}
+  .pill{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:3px 10px;border-radius:20px;background:var(--ok-bg);color:var(--ok)}
+  .tabs{display:flex;gap:2px;margin:22px 0 4px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .tab{padding:10px 14px;font-size:13.5px;font-weight:600;color:var(--muted);cursor:pointer;border:none;background:none;font-family:inherit;border-bottom:2.5px solid transparent;margin-bottom:-1px}
   .tab.active{color:var(--navy);border-bottom-color:var(--gold)}
   .panel{display:none;padding-top:20px}
   .panel.active{display:block;animation:fade .25s ease}
   @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-  .ev{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px;background:#fcfdff}
-  .ev h4{font-family:'Fraunces',serif;font-size:17px;color:var(--navy)}
-  .ev .meta{font-size:13px;color:var(--muted);margin:3px 0 8px}
-  .ev p{font-size:14px}
-  .ev-rsvp{display:inline-block;margin-top:10px;font-size:12px;font-weight:700;color:var(--gold);
-    text-transform:uppercase;letter-spacing:.04em}
-  .res{display:flex;justify-content:space-between;align-items:center;gap:12px;
-    border:1px solid var(--line);border-radius:10px;padding:13px 16px;margin-bottom:10px;background:#fcfdff;
-    text-decoration:none;color:var(--ink)}
-  .res:hover{border-color:var(--gold)}
-  .res .cat{font-size:11px;color:var(--gold);font-weight:700;text-transform:uppercase}
-  .res h5{font-size:15px;color:var(--navy);font-family:'Fraunces',serif}
-  .res .arr{color:var(--gold);font-size:18px}
+  .ev,.ann,.post{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px;background:#fcfdff}
+  .ev h4,.ann h4{font-family:'Fraunces',serif;font-size:17px;color:var(--navy)}
+  .ev .meta,.ann .meta,.post .meta{font-size:12.5px;color:var(--muted);margin:3px 0 8px}
+  .ev p,.ann p,.post p{font-size:14px;white-space:pre-wrap}
+  .ev-rsvp{display:inline-block;margin-top:10px;font-size:12px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.04em}
+  .post-actions{margin-top:10px;display:flex;gap:8px}
   .empty{text-align:center;color:var(--muted);font-size:14px;padding:30px 0}
   .foot{text-align:center;font-size:11.5px;color:var(--muted);margin-top:24px;letter-spacing:.03em}
   .confirm-email{font-family:'Fraunces',serif;color:var(--navy);font-weight:600}
+  .yt-wrap{position:relative;padding-bottom:56.25%;height:0;border-radius:12px;overflow:hidden;margin-bottom:18px;background:#000}
+  .yt-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .yt-title{font-family:'Fraunces',serif;font-size:16px;color:var(--navy);margin-bottom:8px}
+  .bday{position:relative;overflow:hidden;border-radius:14px;padding:24px 20px;margin-bottom:18px;text-align:center;background:linear-gradient(135deg,#fff7e6,#ffeccc);border:1.5px solid var(--gold-soft)}
+  .bday h3{font-family:'Fraunces',serif;font-size:20px;color:var(--navy);margin-bottom:6px}
+  .bday .names{font-size:17px;font-weight:600;color:#9a6b00;line-height:1.7}
+  .bday .cake{font-size:34px;margin-bottom:4px}
+  #confetti{position:fixed;inset:0;pointer-events:none;z-index:50;display:none}
+  .section-add{border:1px dashed var(--line);border-radius:12px;padding:16px;margin-bottom:18px;background:#fafbfd}
 </style>
 </head>
 <body>
+<canvas id="confetti"></canvas>
 <div class="wrap">
   <div class="topbar">
-    <div class="crest">RAM</div>
+    <div class="crest">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-label="LAAPOA RAM">
+        <defs>
+          <path id="arc" d="M 18 50 A 32 32 0 0 1 82 50" fill="none"/>
+          <radialGradient id="bg" cx="35%" cy="30%">
+            <stop offset="0%" stop-color="#13355f"/><stop offset="100%" stop-color="#0a2342"/>
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="46" fill="url(#bg)" stroke="#c8a24a" stroke-width="3"/>
+        <text font-family="Archivo,sans-serif" font-size="13" font-weight="700" fill="#c8a24a" letter-spacing="2">
+          <textPath href="#arc" startOffset="50%" text-anchor="middle">LAAPOA</textPath>
+        </text>
+        <text x="50" y="66" text-anchor="middle" font-family="Fraunces,serif" font-weight="700" font-size="26" fill="#c8a24a" letter-spacing="1">RAM</text>
+      </svg>
+    </div>
     <div class="brand">
-      <h1>Retiree Associate Membership</h1>
+      <h1>Retired Associate Member</h1>
       <p>Los Angeles Airport Peace Officers Association</p>
     </div>
   </div>
 
-  <!-- ===== LOGIN: email entry ===== -->
   <section id="view-email" class="card">
-    <div class="card-head"><h2>Member Sign In</h2><p>Enter your email to receive a one-time code and sign-in link.</p></div>
+    <div class="card-head with-logo">
+      <div class="logo-corner">
+        <img src="https://github.com/LAAPOA/grievancecenter/blob/main/laapoa_logo_transparent.png?raw=true" alt="LAAPOA" onerror="this.style.display='none';this.parentNode.querySelector('.logo-fallback').style.display='block'">
+        <span class="logo-fallback" style="display:none">LAAPOA</span>
+      </div>
+      <h2>Member Sign In</h2><p>Enter your email to receive a one-time code and sign-in link.</p>
+    </div>
     <div class="card-body">
       <div id="email-msg" class="msg"></div>
       <div class="field">
@@ -143,11 +155,10 @@
         <input type="email" id="email" autocomplete="email" placeholder="you@example.com" />
       </div>
       <button class="btn btn-primary" id="btn-request">Send my code</button>
-      <p class="center mt hint">Not a member yet? <button class="link" id="to-enroll">Enroll here</button></p>
+      <p class="center mt hint">First time here? <button class="link" id="to-enroll">Enroll here</button></p>
     </div>
   </section>
 
-  <!-- ===== LOGIN: code entry ===== -->
   <section id="view-code" class="card hide">
     <div class="card-head"><h2>Enter Your Code</h2><p>We emailed a 6-digit code and a sign-in link to your inbox.</p></div>
     <div class="card-body">
@@ -161,7 +172,6 @@
     </div>
   </section>
 
-  <!-- ===== MAGIC LINK confirm ===== -->
   <section id="view-confirm" class="card hide">
     <div class="card-head"><h2>Confirm Sign-In</h2><p>For your security, please confirm it's you.</p></div>
     <div class="card-body">
@@ -172,7 +182,6 @@
     </div>
   </section>
 
-  <!-- ===== ENROLLMENT ===== -->
   <section id="view-enroll" class="card hide">
     <div class="card-head"><h2>Retiree Enrollment</h2><p>Submit your information to request RAM Portal access.</p></div>
     <div class="card-body">
@@ -187,17 +196,17 @@
         <div class="field"><label for="e-cid">City Employee ID</label><input type="text" id="e-cid" /></div>
       </div>
       <div class="row">
+        <div class="field"><label for="e-bday">Date of birth</label><input type="date" id="e-bday" /></div>
         <div class="field"><label for="e-rdate">Retirement date</label><input type="date" id="e-rdate" /></div>
-        <div class="field"><label for="e-rfrom">Retired from</label>
-          <select id="e-rfrom"><option value="">Select…</option><option>LAX</option><option>Municipal</option><option>Rangers</option></select>
-        </div>
+      </div>
+      <div class="field"><label for="e-rfrom">Retired from</label>
+        <select id="e-rfrom"><option value="">Select…</option><option>LAX</option><option>Municipal</option><option>Rangers</option></select>
       </div>
       <button class="btn btn-primary" id="btn-enroll">Submit enrollment</button>
       <p class="center mt"><button class="link" id="to-login">Back to sign in</button></p>
     </div>
   </section>
 
-  <!-- ===== DASHBOARD ===== -->
   <section id="view-dash" class="card hide">
     <div class="card-head">
       <div class="dash-head">
@@ -207,17 +216,32 @@
     </div>
     <div class="card-body" style="padding-top:8px">
       <div class="tabs">
-        <button class="tab active" data-tab="events">Events</button>
-        <button class="tab" data-tab="resources">Resources</button>
+        <button class="tab active" data-tab="announce">Announcements</button>
+        <button class="tab" data-tab="events">Events</button>
+        <button class="tab" data-tab="bulletin">Bulletin Board</button>
         <button class="tab" data-tab="profile">My Profile</button>
       </div>
 
-      <div class="panel active" id="panel-events">
+      <div class="panel active" id="panel-announce">
+        <div id="bday-board"></div>
+        <div id="yt-board"></div>
+        <div id="announce-list"><div class="empty">Loading announcements…</div></div>
+      </div>
+
+      <div class="panel" id="panel-events">
         <div id="events-list"><div class="empty">Loading events…</div></div>
       </div>
 
-      <div class="panel" id="panel-resources">
-        <div id="resources-list"><div class="empty">Loading resources…</div></div>
+      <div class="panel" id="panel-bulletin">
+        <div class="section-add">
+          <div id="bulletin-msg" class="msg"></div>
+          <div class="field" style="margin-bottom:10px">
+            <label for="b-body">Post to the board</label>
+            <textarea id="b-body" placeholder="Share something with fellow members…"></textarea>
+          </div>
+          <button class="btn btn-primary btn-sm" id="btn-bpost">Post</button>
+        </div>
+        <div id="bulletin-list"><div class="empty">Loading posts…</div></div>
       </div>
 
       <div class="panel" id="panel-profile">
@@ -230,7 +254,11 @@
         <div class="field"><label>Email</label><input type="text" id="p-email" disabled /></div>
         <div class="row">
           <div class="field"><label>Retired from</label><input type="text" id="p-rfrom" disabled /></div>
-          <div class="field"><label>Retirement date</label><input type="text" id="p-rdate" disabled /></div>
+          <div class="field"><label>Date of birth</label><input type="text" id="p-bday" disabled /></div>
+        </div>
+        <div class="check">
+          <input type="checkbox" id="p-optout" />
+          <label for="p-optout">Hide my birthday from the daily shout-out</label>
         </div>
         <button class="btn btn-primary" id="btn-save-profile">Save changes</button>
         <button class="btn btn-ghost" id="btn-logout">Sign out</button>
@@ -238,13 +266,13 @@
     </div>
   </section>
 
-  <p class="foot">© LAAPOA · Retiree Associate Membership Portal · v1.00</p>
+  <p class="foot">© LAAPOA · Retiree Associate Membership Portal · v1.01</p>
 </div>
 
 <script>
 const API = 'https://ram-api.shortadrs.com';
 const TKEY = 'ram_session';
-let pendingEmail = '';
+let pendingEmail = '', linkToken = '', myEmail = '';
 
 const $ = id => document.getElementById(id);
 const show = v => { ['email','code','confirm','enroll','dash'].forEach(x => $('view-'+x).classList.add('hide')); $('view-'+v).classList.remove('hide'); };
@@ -253,6 +281,7 @@ function clearMsg(el){ const m=$(el); m.className='msg'; m.textContent=''; }
 function token(){ return localStorage.getItem(TKEY); }
 function setToken(t){ localStorage.setItem(TKEY, t); }
 function clearToken(){ localStorage.removeItem(TKEY); }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 async function api(path, opts){
   opts = opts || {};
@@ -264,7 +293,14 @@ async function api(path, opts){
   return data;
 }
 
-/* ---------- login: request code ---------- */
+function greeting(){
+  const now = new Date();
+  const mins = now.getHours()*60 + now.getMinutes();
+  if (mins >= 150 && mins < 720) return 'Good morning';
+  if (mins >= 720 && mins < 1035) return 'Good afternoon';
+  return 'Good evening';
+}
+
 $('btn-request').onclick = async () => {
   const email = $('email').value.trim().toLowerCase();
   clearMsg('email-msg');
@@ -274,14 +310,13 @@ $('btn-request').onclick = async () => {
     const r = await api('/auth/request-code', { method:'POST', body:{ email } });
     if (r.status === 'sent'){ pendingEmail = email; show('code'); clearMsg('code-msg'); $('code').focus(); }
     else if (r.status === 'pending') msg('email-msg','Your account is pending approval. An administrator has been notified.','warn');
-    else if (r.status === 'not_found'){ msg('email-msg','No account found for that email. Please enroll.','warn'); setTimeout(()=>{ $('e-email').value = email; show('enroll'); }, 1400); }
+    else if (r.status === 'not_found'){ msg('email-msg','No account found. Redirecting you to enrollment…','warn'); setTimeout(()=>{ $('e-email').value = email; show('enroll'); }, 1400); }
     else if (r.status === 'not_authorized') msg('email-msg','This account is not authorized to sign in.','err');
     else msg('email-msg','Unexpected response. Please try again.','err');
   } catch(e){ msg('email-msg','Something went wrong: ' + e.message,'err'); }
   b.disabled = false; b.textContent = 'Send my code';
 };
 
-/* ---------- login: verify code ---------- */
 $('btn-verify').onclick = async () => {
   const code = $('code').value.trim();
   clearMsg('code-msg');
@@ -295,23 +330,19 @@ $('btn-verify').onclick = async () => {
 };
 $('code').addEventListener('keydown', e => { if (e.key === 'Enter') $('btn-verify').click(); });
 $('email').addEventListener('keydown', e => { if (e.key === 'Enter') $('btn-request').click(); });
-
 $('resend').onclick = () => { show('email'); clearMsg('email-msg'); };
 
-/* ---------- magic link confirm ---------- */
-let linkToken = '';
 $('btn-confirm').onclick = async () => {
   const b = $('btn-confirm'); b.disabled = true; b.innerHTML = '<span class="spin" style="border-top-color:#0a2342"></span>Signing in…';
   try {
     const r = await api('/auth/verify-link', { method:'POST', body:{ token: linkToken } });
     setToken(r.token);
-    history.replaceState({}, '', location.pathname); // strip token from URL
+    history.replaceState({}, '', location.pathname);
     await enterDashboard();
   } catch(e){ msg('confirm-msg', e.message + ' — please request a new link.','err'); b.disabled=false; b.textContent='Yes, sign me in'; }
 };
 $('confirm-cancel').onclick = () => { history.replaceState({}, '', location.pathname); show('email'); };
 
-/* ---------- enrollment ---------- */
 $('to-enroll').onclick = () => { show('enroll'); clearMsg('enroll-msg'); };
 $('to-login').onclick = () => { show('email'); };
 $('btn-enroll').onclick = async () => {
@@ -319,11 +350,12 @@ $('btn-enroll').onclick = async () => {
   const m = {
     first: $('e-first').value.trim(), last: $('e-last').value.trim(),
     email: $('e-email').value.trim().toLowerCase(), phone: $('e-phone').value.trim(),
-    city_employee_id: $('e-cid').value.trim(), retire_date: $('e-rdate').value,
-    retired_from: $('e-rfrom').value
+    city_employee_id: $('e-cid').value.trim(), birthday: $('e-bday').value,
+    retire_date: $('e-rdate').value, retired_from: $('e-rfrom').value
   };
   if (!m.first || !m.last) return msg('enroll-msg','First and last name are required.','err');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(m.email)) return msg('enroll-msg','Please enter a valid email.','err');
+  if (!m.birthday) return msg('enroll-msg','Date of birth is required.','err');
   if (!m.retired_from) return msg('enroll-msg','Please select where you retired from.','err');
   const b = $('btn-enroll'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Submitting…';
   try {
@@ -334,23 +366,23 @@ $('btn-enroll').onclick = async () => {
   b.disabled = false; b.textContent = 'Submit enrollment';
 };
 
-/* ---------- dashboard ---------- */
 async function enterDashboard(){
   show('dash');
   let me;
   try { me = await api('/me', { auth:true }); }
   catch(e){ clearToken(); show('email'); msg('email-msg','Session expired. Please sign in again.','warn'); return; }
   const mem = me.member || {};
-  const name = (mem.first || '') + ' ' + (mem.last || '');
-  $('dash-name').textContent = name.trim() ? 'Welcome, ' + mem.first : 'Welcome';
+  myEmail = me.session.email;
+  const hello = greeting();
+  $('dash-name').textContent = mem.first ? (hello + ', ' + mem.first) : hello;
   $('dash-email').textContent = me.session.email + (me.session.admin ? ' · Administrator' : '');
   const st = (mem.status || 'active');
   $('dash-status').textContent = st.charAt(0).toUpperCase() + st.slice(1);
-  // profile fields
   $('p-first').value = mem.first || ''; $('p-last').value = mem.last || '';
   $('p-phone').value = mem.phone || ''; $('p-email').value = me.session.email;
-  $('p-rfrom').value = mem.retired_from || ''; $('p-rdate').value = mem.retire_date || '';
-  loadEvents(); loadResources();
+  $('p-rfrom').value = mem.retired_from || ''; $('p-bday').value = mem.birthday || '';
+  $('p-optout').checked = !!mem.birthday_optout;
+  loadAnnouncements(); loadEvents(); loadBulletin();
 }
 
 document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
@@ -358,6 +390,56 @@ document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
   document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
   t.classList.add('active'); $('panel-'+t.dataset.tab).classList.add('active');
 });
+
+async function loadAnnouncements(){
+  let settings = {};
+  try { const s = await api('/settings', { auth:true }); settings = s.settings || {}; } catch(e){}
+
+  const bdayBox = $('bday-board'); bdayBox.innerHTML = '';
+  const mins = new Date().getHours()*60 + new Date().getMinutes();
+  const inWindow = mins >= 270 && mins < 720;
+  if (settings.birthdays_enabled && inWindow){
+    try {
+      const r = await api('/birthdays', { auth:true });
+      const names = (r.birthdays||[]).map(b => esc(((b.first||'') + ' ' + (b.last||'')).trim())).filter(Boolean);
+      if (names.length){
+        bdayBox.innerHTML = '<div class="bday"><div class="cake">🎂</div><h3>Happy Birthday!</h3><div class="names">'+ names.join('<br>') +'</div></div>';
+        fireConfetti();
+      }
+    } catch(e){}
+  }
+
+  const ytBox = $('yt-board'); ytBox.innerHTML = '';
+  if (settings.youtube_enabled && settings.youtube_url){
+    const id = ytId(settings.youtube_url);
+    if (id){
+      ytBox.innerHTML = (settings.youtube_title ? '<div class="yt-title">'+esc(settings.youtube_title)+'</div>' : '') +
+        '<div class="yt-wrap"><iframe src="https://www.youtube.com/embed/'+esc(id)+'" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe></div>';
+    }
+  }
+
+  const box = $('announce-list');
+  if (settings.announcements_enabled === false){ box.innerHTML = ''; return; }
+  try {
+    const r = await api('/announcements', { auth:true });
+    const list = r.announcements || [];
+    if (!list.length){ box.innerHTML = '<div class="empty">No announcements right now.</div>'; return; }
+    box.innerHTML = list.map(a => `
+      <div class="ann">
+        ${a.title ? '<h4>'+esc(a.title)+'</h4>' : ''}
+        <div class="meta">${esc(a.posted_date||'')}</div>
+        ${a.body ? '<p>'+esc(a.body)+'</p>' : ''}
+      </div>`).join('');
+  } catch(e){ box.innerHTML = '<div class="empty">Couldn\'t load announcements.</div>'; }
+}
+
+function ytId(url){
+  const s = String(url).trim();
+  let m = s.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([A-Za-z0-9_-]{11})/);
+  if (m) return m[1];
+  if (/^[A-Za-z0-9_-]{11}$/.test(s)) return s;
+  return '';
+}
 
 async function loadEvents(){
   const box = $('events-list');
@@ -375,35 +457,90 @@ async function loadEvents(){
   } catch(e){ box.innerHTML = '<div class="empty">Couldn\'t load events.</div>'; }
 }
 
-async function loadResources(){
-  const box = $('resources-list');
-  // Resources endpoint optional; show placeholder gracefully
+async function loadBulletin(){
+  const box = $('bulletin-list');
   try {
-    const r = await api('/resources', { auth:true });
-    const rs = (r && r.resources) || [];
-    if (!rs.length){ box.innerHTML = '<div class="empty">No resources posted yet.</div>'; return; }
-    box.innerHTML = rs.map(x => `
-      <a class="res" href="${esc(x.url)}" target="_blank" rel="noopener">
-        <div><div class="cat">${esc(x.category||'Resource')}</div><h5>${esc(x.title)}</h5></div>
-        <span class="arr">→</span>
-      </a>`).join('');
-  } catch(e){ box.innerHTML = '<div class="empty">No resources posted yet.</div>'; }
+    const r = await api('/bulletin', { auth:true });
+    const posts = r.posts || [];
+    if (!posts.length){ box.innerHTML = '<div class="empty">No posts yet. Be the first!</div>'; return; }
+    box.innerHTML = posts.map(p => `
+      <div class="post" data-id="${esc(p.id)}">
+        <div class="meta"><strong>${esc(p.author_name||p.author_email)}</strong> · ${esc(p.created||'')}${p.updated&&p.updated!==p.created?' · edited':''}</div>
+        <p>${esc(p.body)}</p>
+        <div class="post-actions">
+          <button class="btn btn-ghost btn-sm act-edit">Edit</button>
+          <button class="btn btn-danger btn-sm act-del">Delete</button>
+        </div>
+      </div>`).join('');
+    box.querySelectorAll('.post').forEach(el => {
+      const id = el.dataset.id;
+      el.querySelector('.act-del').onclick = () => delBulletin(id);
+      el.querySelector('.act-edit').onclick = () => editBulletin(id, el);
+    });
+  } catch(e){ box.innerHTML = '<div class="empty">Couldn\'t load posts.</div>'; }
+}
+
+$('btn-bpost').onclick = async () => {
+  clearMsg('bulletin-msg');
+  const body = $('b-body').value.trim();
+  if (!body) return msg('bulletin-msg','Write something to post.','err');
+  const b = $('btn-bpost'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Posting…';
+  try { await api('/bulletin', { method:'POST', auth:true, body:{ body } }); $('b-body').value=''; loadBulletin(); }
+  catch(e){ msg('bulletin-msg', e.message,'err'); }
+  b.disabled = false; b.textContent = 'Post';
+};
+
+async function delBulletin(id){
+  if (!confirm('Delete this post?')) return;
+  try { await api('/bulletin/'+encodeURIComponent(id), { method:'DELETE', auth:true }); loadBulletin(); }
+  catch(e){ alert('Delete failed: ' + e.message); }
+}
+
+function editBulletin(id, el){
+  const current = el.querySelector('p').textContent;
+  const next = prompt('Edit post:', current);
+  if (next == null || next.trim() === '') return;
+  api('/bulletin/'+encodeURIComponent(id), { method:'PATCH', auth:true, body:{ body: next.trim() } })
+    .then(loadBulletin).catch(e => alert('Edit failed: ' + e.message));
 }
 
 $('btn-save-profile').onclick = async () => {
   clearMsg('profile-msg');
-  const patch = { first:$('p-first').value.trim(), last:$('p-last').value.trim(), phone:$('p-phone').value.trim() };
+  const patch = {
+    first:$('p-first').value.trim(), last:$('p-last').value.trim(),
+    phone:$('p-phone').value.trim(), birthday_optout: $('p-optout').checked
+  };
   const b = $('btn-save-profile'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Saving…';
   try { await api('/me', { method:'PATCH', auth:true, body:patch }); msg('profile-msg','Profile updated.','ok'); }
   catch(e){ msg('profile-msg', e.message,'err'); }
   b.disabled = false; b.textContent = 'Save changes';
 };
-
 $('btn-logout').onclick = () => { clearToken(); show('email'); $('email').value=''; clearMsg('email-msg'); };
 
-function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fireConfetti(){
+  const c = $('confetti'); c.style.display='block';
+  const ctx = c.getContext('2d');
+  c.width = innerWidth; c.height = innerHeight;
+  const colors = ['#c8a24a','#0a2342','#e3c781','#13355f','#ffffff'];
+  let parts = Array.from({length:140}, () => ({
+    x: Math.random()*c.width, y: Math.random()*-c.height,
+    r: 4+Math.random()*6, c: colors[Math.floor(Math.random()*colors.length)],
+    vy: 2+Math.random()*3, vx: -1.5+Math.random()*3, rot: Math.random()*6, vr: -.2+Math.random()*.4
+  }));
+  let frames = 0;
+  (function anim(){
+    ctx.clearRect(0,0,c.width,c.height);
+    parts.forEach(p => {
+      p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr;
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+      ctx.fillStyle=p.c; ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*.6); ctx.restore();
+    });
+    frames++;
+    if (frames < 380) requestAnimationFrame(anim);
+    else { ctx.clearRect(0,0,c.width,c.height); c.style.display='none'; }
+  })();
+}
 
-/* ---------- boot ---------- */
 (function init(){
   const params = new URLSearchParams(location.search);
   const t = params.get('token'); const em = params.get('email');
