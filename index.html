@@ -1,18 +1,23 @@
 <!DOCTYPE html>
 <!--
   RAM index — LAAPOA Retiree Associate Membership Portal (member-facing)
-  Version: 1.01
+  Version: 1.03
   Backend: ram-api.shortadrs.com
-  Changelog 1.01: logo in navy block, arched LAAPOA crest, title/subtitle update,
-    time-of-day greeting, Announcements tab (announcements + YouTube + birthday board
-    with confetti, 04:30-12:00 window), Bulletin board tab (open add/edit/delete),
-    enrollment birthday field (required), profile birthday opt-out.
+  Changelog 1.03: In Memoriam tab (carousel, Drive photo upload, member create/edit/delete,
+    admin lock/unlock), /bootstrap single round-trip dashboard load for speed,
+    rippled police-tape app icon.
 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LAAPOA RAM Portal — Retired Associate Member</title>
+<meta name="theme-color" content="#0a2342">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RAM Portal">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -38,7 +43,7 @@
   }
   .wrap{max-width:660px;margin:0 auto;padding:32px 20px 64px}
   .topbar{display:flex;align-items:center;gap:14px;margin-bottom:28px}
-  .crest{width:52px;height:52px;flex:none;position:relative}
+  .crest{width:62px;height:62px;flex:none;position:relative}
   .crest svg{display:block;width:100%;height:100%}
   .brand h1{font-family:'Fraunces',serif;font-size:21px;font-weight:600;color:var(--navy);letter-spacing:-.01em}
   .brand p{font-size:12px;color:var(--muted);letter-spacing:.03em}
@@ -113,6 +118,59 @@
   .bday .cake{font-size:34px;margin-bottom:4px}
   #confetti{position:fixed;inset:0;pointer-events:none;z-index:50;display:none}
   .section-add{border:1px dashed var(--line);border-radius:12px;padding:16px;margin-bottom:18px;background:#fafbfd}
+  /* PROTECT pill */
+  .protect-pill{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;
+    line-height:1.05;padding:7px 14px;border-radius:12px;cursor:pointer;border:1.5px solid transparent;
+    font-weight:800;font-size:11px;letter-spacing:.06em;text-align:center;transition:.15s;min-width:96px}
+  .protect-pill small{font-size:9px;font-weight:700;opacity:.85;letter-spacing:.1em}
+  .protect-pill .lbl{display:flex;align-items:center;gap:4px}
+  .protect-yes{background:#d8f0e2;color:#15633f;border-color:#a9dcc1}
+  .protect-yes:hover{background:#c8e9d6}
+  .protect-no{background:#fadbdf;color:#9a2330;border-color:#f0b6bd}
+  .protect-no:hover{background:#f6cdd2}
+  .strike{position:relative;display:inline-block}
+  .strike::after{content:'';position:absolute;left:-3px;right:-3px;top:50%;height:0;
+    border-top:2px solid currentColor;transform:rotate(-12deg)}
+  .protect-circle{display:inline-grid;place-items:center;width:15px;height:15px;border:2px solid currentColor;border-radius:50%;font-size:10px;font-weight:900}
+  /* directory */
+  .dir-row{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    border:1px solid var(--line);border-radius:11px;padding:13px 16px;margin-bottom:10px;background:#fcfdff}
+  .dir-row .who{font-weight:600;color:var(--navy);font-size:15px}
+  .dir-row .sub{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .dir-contact{font-size:12.5px;margin-top:4px;color:var(--ink)}
+  .blurred{filter:blur(4px);user-select:none;color:var(--muted)}
+  .dir-tease{font-size:11px;color:var(--gold);font-weight:700;margin-top:3px;font-style:italic}
+  .mini-protect{font-size:9px;font-weight:800;letter-spacing:.05em;padding:2px 7px;border-radius:8px;margin-left:6px;vertical-align:middle}
+  .mp-yes{background:#d8f0e2;color:#15633f}
+  .mp-no{background:#fadbdf;color:#9a2330}
+  .dir-search{margin-bottom:14px}
+  /* modal */
+  .modal{position:fixed;inset:0;background:rgba(10,35,66,.55);display:none;align-items:center;justify-content:center;z-index:60;padding:20px}
+  .modal.show{display:flex}
+  .modal-card{background:#fff;border-radius:14px;max-width:440px;width:100%;box-shadow:var(--shadow);overflow:hidden}
+  .modal-head{background:linear-gradient(135deg,var(--navy),var(--navy-2));color:#fff;padding:16px 20px;font-family:'Fraunces',serif;font-size:17px}
+  .modal-body{padding:20px}
+  /* memorial carousel */
+  .mem-stage{position:relative;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fcfdff;min-height:320px}
+  .mem-slide{display:none;padding:0}
+  .mem-slide.active{display:block;animation:fade .3s ease}
+  .mem-photo{width:100%;height:240px;object-fit:cover;background:#0a2342;display:block}
+  .mem-photo-empty{width:100%;height:160px;background:linear-gradient(135deg,var(--navy),var(--navy-2));display:grid;place-items:center;color:var(--gold);font-family:'Fraunces',serif;font-size:40px}
+  .mem-info{padding:18px 20px}
+  .mem-info h3{font-family:'Fraunces',serif;font-size:22px;color:var(--navy);margin-bottom:2px}
+  .mem-dates{font-size:13px;color:var(--muted);margin-bottom:4px}
+  .mem-eow{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.05em;color:#7a1f1f;background:#fadbdf;padding:2px 9px;border-radius:8px;margin-bottom:10px}
+  .mem-section{margin-top:12px}
+  .mem-section .h{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin-bottom:3px}
+  .mem-section p{font-size:14px;white-space:pre-wrap}
+  .mem-nav{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid var(--line);background:#fff}
+  .mem-nav button{background:none;border:1.5px solid var(--line);border-radius:9px;padding:8px 16px;cursor:pointer;font-family:inherit;font-weight:600;color:var(--navy);font-size:14px}
+  .mem-nav button:hover{border-color:var(--navy)}
+  .mem-nav button:disabled{opacity:.4;cursor:default}
+  .mem-count{font-size:12.5px;color:var(--muted)}
+  .mem-actions{display:flex;gap:8px;padding:0 20px 16px}
+  .mem-lock-badge{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.05em;color:#8a5a00;background:var(--warn-bg);padding:2px 8px;border-radius:7px;margin-left:8px;vertical-align:middle}
+  .uploading{font-size:12px;color:var(--muted);margin-top:6px}
 </style>
 </head>
 <body>
@@ -210,14 +268,16 @@
   <section id="view-dash" class="card hide">
     <div class="card-head">
       <div class="dash-head">
-        <div><h2 id="dash-name">Welcome</h2><p id="dash-email"></p></div>
-        <span class="pill" id="dash-status">Active</span>
+        <div><h2 id="dash-name">Welcome</h2><p id="dash-sub"></p></div>
+        <div id="protect-pill-wrap"></div>
       </div>
     </div>
     <div class="card-body" style="padding-top:8px">
       <div class="tabs">
         <button class="tab active" data-tab="announce">Announcements</button>
         <button class="tab" data-tab="events">Events</button>
+        <button class="tab" data-tab="directory">Directory</button>
+        <button class="tab" data-tab="memoriam">In Memoriam</button>
         <button class="tab" data-tab="bulletin">Bulletin Board</button>
         <button class="tab" data-tab="profile">My Profile</button>
       </div>
@@ -230,6 +290,27 @@
 
       <div class="panel" id="panel-events">
         <div id="events-list"><div class="empty">Loading events…</div></div>
+      </div>
+
+      <div class="panel" id="panel-directory">
+        <div class="section-add">
+          <div id="invite-msg" class="msg"></div>
+          <label style="margin-bottom:8px">Invite a fellow retiree</label>
+          <div class="row" style="margin-bottom:10px">
+            <input type="text" id="inv-name" placeholder="Their name (optional)" />
+            <input type="email" id="inv-email" placeholder="their@email.com" />
+          </div>
+          <button class="btn btn-primary btn-sm" id="btn-invite">Send invite</button>
+        </div>
+        <input type="text" id="dir-search" class="dir-search" placeholder="Search members by name…" />
+        <div id="directory-list"><div class="empty">Loading directory…</div></div>
+      </div>
+
+      <div class="panel" id="panel-memoriam">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+          <button class="btn btn-primary btn-sm" id="btn-mem-new">+ Add a memorial</button>
+        </div>
+        <div id="mem-carousel"><div class="empty">Loading…</div></div>
       </div>
 
       <div class="panel" id="panel-bulletin">
@@ -260,19 +341,66 @@
           <input type="checkbox" id="p-optout" />
           <label for="p-optout">Hide my birthday from the daily shout-out</label>
         </div>
+        <div class="check">
+          <input type="checkbox" id="p-hide-phone" />
+          <label for="p-hide-phone">Hide my phone in the directory</label>
+        </div>
+        <div class="check">
+          <input type="checkbox" id="p-hide-email" />
+          <label for="p-hide-email">Hide my email in the directory</label>
+        </div>
+        <div class="check">
+          <input type="checkbox" id="p-hide-dir" />
+          <label for="p-hide-dir">Hide me from the directory entirely</label>
+        </div>
+        <p class="hint">Sharing is reciprocal: if you hide a field, you won't see that field for other members either.</p>
         <button class="btn btn-primary" id="btn-save-profile">Save changes</button>
         <button class="btn btn-ghost" id="btn-logout">Sign out</button>
       </div>
     </div>
   </section>
 
-  <p class="foot">© LAAPOA · Retiree Associate Membership Portal · v1.01</p>
+  <p class="foot">© LAAPOA · Retiree Associate Membership Portal · v1.03</p>
+</div>
+
+<div class="modal" id="dm-modal">
+  <div class="modal-card">
+    <div class="modal-head" id="dm-head">Message a Member</div>
+    <div class="modal-body">
+      <div id="dm-msg" class="msg"></div>
+      <p class="hint">Your message will be emailed to this member. Their address stays private; replies come to you.</p>
+      <textarea id="dm-body" placeholder="Write your message…"></textarea>
+      <button class="btn btn-primary mt" id="dm-send">Send message</button>
+      <button class="btn btn-ghost" id="dm-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="mem-modal">
+  <div class="modal-card" style="max-width:520px">
+    <div class="modal-head" id="mem-modal-head">Add a Memorial</div>
+    <div class="modal-body">
+      <div id="mem-msg" class="msg"></div>
+      <div class="field"><label for="m-name">Name</label><input type="text" id="m-name" /></div>
+      <div class="row">
+        <div class="field"><label for="m-dob">Date of birth</label><input type="date" id="m-dob" /></div>
+        <div class="field"><label for="m-dop">Date of passing</label><input type="date" id="m-dop" /></div>
+      </div>
+      <div class="field"><label for="m-eow">End of Watch (optional)</label><input type="text" id="m-eow" placeholder="e.g. EOW June 1, 2026" /></div>
+      <div class="field"><label for="m-photo">Photo</label><input type="file" id="m-photo" accept="image/*" /><div class="uploading hide" id="m-upinfo"></div></div>
+      <div class="field"><label for="m-service">Memorial service details</label><textarea id="m-service" placeholder="Date, time, location of services…"></textarea></div>
+      <div class="field"><label for="m-tribute">Tribute</label><textarea id="m-tribute" placeholder="A few words in remembrance…"></textarea></div>
+      <button class="btn btn-primary" id="mem-save">Save memorial</button>
+      <button class="btn btn-ghost" id="mem-cancel">Cancel</button>
+    </div>
+  </div>
 </div>
 
 <script>
 const API = 'https://ram-api.shortadrs.com';
 const TKEY = 'ram_session';
-let pendingEmail = '', linkToken = '', myEmail = '';
+let pendingEmail = '', linkToken = '', myEmail = '', isAdminUser = false;
+let dirCache = [], memCache = [], memIndex = 0;
 
 const $ = id => document.getElementById(id);
 const show = v => { ['email','code','confirm','enroll','dash'].forEach(x => $('view-'+x).classList.add('hide')); $('view-'+v).classList.remove('hide'); };
@@ -366,23 +494,54 @@ $('btn-enroll').onclick = async () => {
   b.disabled = false; b.textContent = 'Submit enrollment';
 };
 
+let bootData = null;
 async function enterDashboard(){
   show('dash');
-  let me;
-  try { me = await api('/me', { auth:true }); }
+  let bs;
+  try { bs = await api('/bootstrap', { auth:true }); }
   catch(e){ clearToken(); show('email'); msg('email-msg','Session expired. Please sign in again.','warn'); return; }
-  const mem = me.member || {};
-  myEmail = me.session.email;
+  bootData = bs;
+  const mem = bs.member || {};
+  myEmail = bs.session.email;
+  isAdminUser = !!bs.session.admin;
   const hello = greeting();
   $('dash-name').textContent = mem.first ? (hello + ', ' + mem.first) : hello;
-  $('dash-email').textContent = me.session.email + (me.session.admin ? ' · Administrator' : '');
-  const st = (mem.status || 'active');
-  $('dash-status').textContent = st.charAt(0).toUpperCase() + st.slice(1);
+  $('dash-sub').textContent = ((mem.first || '') + ' ' + (mem.last || '')).trim() + (bs.session.admin ? ' · Administrator' : '');
+  renderProtectPill(isProtectedVal(mem.laapoa_protect), mem.protect_date);
   $('p-first').value = mem.first || ''; $('p-last').value = mem.last || '';
-  $('p-phone').value = mem.phone || ''; $('p-email').value = me.session.email;
+  $('p-phone').value = mem.phone || ''; $('p-email').value = bs.session.email;
   $('p-rfrom').value = mem.retired_from || ''; $('p-bday').value = mem.birthday || '';
   $('p-optout').checked = !!mem.birthday_optout;
-  loadAnnouncements(); loadEvents(); loadBulletin();
+  $('p-hide-phone').checked = !!mem.hide_phone;
+  $('p-hide-email').checked = !!mem.hide_email;
+  $('p-hide-dir').checked = !!mem.hide_directory;
+  // render everything from the single bootstrap payload
+  renderAnnouncements(bs.settings || {}, bs.announcements || [], bs.birthdays || []);
+  renderEvents(bs.events || []);
+  dirCache = (bs.directory && bs.directory.members) || [];
+  renderDirectory();
+  renderBulletin(bs.bulletin || []);
+  memCache = bs.memorials || [];
+  renderMemorials();
+}
+
+function isProtectedVal(v){ const s=String(v==null?'':v).trim().toLowerCase(); return s==='yes'||s==='true'||s==='y'; }
+
+// Links you'll build later — swap these to your real pages.
+const PROTECT_INFO_URL = 'https://laapoa.github.io/retired/protections.html';
+const PROTECT_PLANS_URL = 'https://laapoa.github.io/retired/plans.html';
+
+function renderProtectPill(isProtected, since){
+  const wrap = $('protect-pill-wrap');
+  if (isProtected){
+    wrap.innerHTML = '<div class="protect-pill protect-yes" title="Covered since '+esc(since||'')+'">'+
+      '<small>LAAPOA</small><span class="lbl">PROTECT <span class="protect-circle" style="border:none;color:#15633f">✓</span></span></div>';
+    wrap.querySelector('.protect-pill').onclick = () => window.open(PROTECT_INFO_URL, '_blank');
+  } else {
+    wrap.innerHTML = '<div class="protect-pill protect-no">'+
+      '<small>LAAPOA</small><span class="lbl"><span class="strike">PROTECT</span> <span class="protect-circle">∅</span></span></div>';
+    wrap.querySelector('.protect-pill').onclick = () => window.open(PROTECT_PLANS_URL, '_blank');
+  }
 }
 
 document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
@@ -391,22 +550,16 @@ document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
   t.classList.add('active'); $('panel-'+t.dataset.tab).classList.add('active');
 });
 
-async function loadAnnouncements(){
-  let settings = {};
-  try { const s = await api('/settings', { auth:true }); settings = s.settings || {}; } catch(e){}
-
+function renderAnnouncements(settings, list, birthdays){
   const bdayBox = $('bday-board'); bdayBox.innerHTML = '';
   const mins = new Date().getHours()*60 + new Date().getMinutes();
   const inWindow = mins >= 270 && mins < 720;
   if (settings.birthdays_enabled && inWindow){
-    try {
-      const r = await api('/birthdays', { auth:true });
-      const names = (r.birthdays||[]).map(b => esc(((b.first||'') + ' ' + (b.last||'')).trim())).filter(Boolean);
-      if (names.length){
-        bdayBox.innerHTML = '<div class="bday"><div class="cake">🎂</div><h3>Happy Birthday!</h3><div class="names">'+ names.join('<br>') +'</div></div>';
-        fireConfetti();
-      }
-    } catch(e){}
+    const names = (birthdays||[]).map(b => esc(((b.first||'') + ' ' + (b.last||'')).trim())).filter(Boolean);
+    if (names.length){
+      bdayBox.innerHTML = '<div class="bday"><div class="cake">🎂</div><h3>Happy Birthday!</h3><div class="names">'+ names.join('<br>') +'</div></div>';
+      fireConfetti();
+    }
   }
 
   const ytBox = $('yt-board'); ytBox.innerHTML = '';
@@ -420,17 +573,13 @@ async function loadAnnouncements(){
 
   const box = $('announce-list');
   if (settings.announcements_enabled === false){ box.innerHTML = ''; return; }
-  try {
-    const r = await api('/announcements', { auth:true });
-    const list = r.announcements || [];
-    if (!list.length){ box.innerHTML = '<div class="empty">No announcements right now.</div>'; return; }
-    box.innerHTML = list.map(a => `
-      <div class="ann">
-        ${a.title ? '<h4>'+esc(a.title)+'</h4>' : ''}
-        <div class="meta">${esc(a.posted_date||'')}</div>
-        ${a.body ? '<p>'+esc(a.body)+'</p>' : ''}
-      </div>`).join('');
-  } catch(e){ box.innerHTML = '<div class="empty">Couldn\'t load announcements.</div>'; }
+  if (!list.length){ box.innerHTML = '<div class="empty">No announcements right now.</div>'; return; }
+  box.innerHTML = list.map(a => `
+    <div class="ann">
+      ${a.title ? '<h4>'+esc(a.title)+'</h4>' : ''}
+      <div class="meta">${esc(a.posted_date||'')}</div>
+      ${a.body ? '<p>'+esc(a.body)+'</p>' : ''}
+    </div>`).join('');
 }
 
 function ytId(url){
@@ -441,43 +590,38 @@ function ytId(url){
   return '';
 }
 
-async function loadEvents(){
+function renderEvents(evs){
   const box = $('events-list');
-  try {
-    const r = await api('/events', { auth:true });
-    const evs = r.events || [];
-    if (!evs.length){ box.innerHTML = '<div class="empty">No upcoming events right now.</div>'; return; }
-    box.innerHTML = evs.map(e => `
-      <div class="ev">
-        <h4>${esc(e.title)}</h4>
-        <div class="meta">${esc(e.date||'')}${e.location ? ' · ' + esc(e.location) : ''}</div>
-        ${e.description ? '<p>'+esc(e.description)+'</p>' : ''}
-        ${e.rsvp_open ? '<span class="ev-rsvp">RSVP open</span>' : ''}
-      </div>`).join('');
-  } catch(e){ box.innerHTML = '<div class="empty">Couldn\'t load events.</div>'; }
+  if (!evs.length){ box.innerHTML = '<div class="empty">No upcoming events right now.</div>'; return; }
+  box.innerHTML = evs.map(e => `
+    <div class="ev">
+      <h4>${esc(e.title)}</h4>
+      <div class="meta">${esc(e.date||'')}${e.location ? ' · ' + esc(e.location) : ''}</div>
+      ${e.description ? '<p>'+esc(e.description)+'</p>' : ''}
+      ${e.rsvp_open ? '<span class="ev-rsvp">RSVP open</span>' : ''}
+    </div>`).join('');
 }
 
-async function loadBulletin(){
+function renderBulletin(posts){
   const box = $('bulletin-list');
-  try {
-    const r = await api('/bulletin', { auth:true });
-    const posts = r.posts || [];
-    if (!posts.length){ box.innerHTML = '<div class="empty">No posts yet. Be the first!</div>'; return; }
-    box.innerHTML = posts.map(p => `
-      <div class="post" data-id="${esc(p.id)}">
-        <div class="meta"><strong>${esc(p.author_name||p.author_email)}</strong> · ${esc(p.created||'')}${p.updated&&p.updated!==p.created?' · edited':''}</div>
-        <p>${esc(p.body)}</p>
-        <div class="post-actions">
-          <button class="btn btn-ghost btn-sm act-edit">Edit</button>
-          <button class="btn btn-danger btn-sm act-del">Delete</button>
-        </div>
-      </div>`).join('');
-    box.querySelectorAll('.post').forEach(el => {
-      const id = el.dataset.id;
-      el.querySelector('.act-del').onclick = () => delBulletin(id);
-      el.querySelector('.act-edit').onclick = () => editBulletin(id, el);
-    });
-  } catch(e){ box.innerHTML = '<div class="empty">Couldn\'t load posts.</div>'; }
+  if (!posts.length){ box.innerHTML = '<div class="empty">No posts yet. Be the first!</div>'; return; }
+  box.innerHTML = posts.map(p => `
+    <div class="post" data-id="${esc(p.id)}">
+      <div class="meta"><strong>${esc(p.author_name||p.author_email)}</strong> · ${esc(p.created||'')}${p.updated&&p.updated!==p.created?' · edited':''}</div>
+      <p>${esc(p.body)}</p>
+      <div class="post-actions">
+        <button class="btn btn-ghost btn-sm act-edit">Edit</button>
+        <button class="btn btn-danger btn-sm act-del">Delete</button>
+      </div>
+    </div>`).join('');
+  box.querySelectorAll('.post').forEach(el => {
+    const id = el.dataset.id;
+    el.querySelector('.act-del').onclick = () => delBulletin(id);
+    el.querySelector('.act-edit').onclick = () => editBulletin(id, el);
+  });
+}
+async function reloadBulletin(){
+  try { const r = await api('/bulletin', { auth:true }); renderBulletin(r.posts || []); } catch(e){}
 }
 
 $('btn-bpost').onclick = async () => {
@@ -485,14 +629,14 @@ $('btn-bpost').onclick = async () => {
   const body = $('b-body').value.trim();
   if (!body) return msg('bulletin-msg','Write something to post.','err');
   const b = $('btn-bpost'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Posting…';
-  try { await api('/bulletin', { method:'POST', auth:true, body:{ body } }); $('b-body').value=''; loadBulletin(); }
+  try { await api('/bulletin', { method:'POST', auth:true, body:{ body } }); $('b-body').value=''; reloadBulletin(); }
   catch(e){ msg('bulletin-msg', e.message,'err'); }
   b.disabled = false; b.textContent = 'Post';
 };
 
 async function delBulletin(id){
   if (!confirm('Delete this post?')) return;
-  try { await api('/bulletin/'+encodeURIComponent(id), { method:'DELETE', auth:true }); loadBulletin(); }
+  try { await api('/bulletin/'+encodeURIComponent(id), { method:'DELETE', auth:true }); reloadBulletin(); }
   catch(e){ alert('Delete failed: ' + e.message); }
 }
 
@@ -501,21 +645,227 @@ function editBulletin(id, el){
   const next = prompt('Edit post:', current);
   if (next == null || next.trim() === '') return;
   api('/bulletin/'+encodeURIComponent(id), { method:'PATCH', auth:true, body:{ body: next.trim() } })
-    .then(loadBulletin).catch(e => alert('Edit failed: ' + e.message));
+    .then(reloadBulletin).catch(e => alert('Edit failed: ' + e.message));
 }
 
 $('btn-save-profile').onclick = async () => {
   clearMsg('profile-msg');
   const patch = {
     first:$('p-first').value.trim(), last:$('p-last').value.trim(),
-    phone:$('p-phone').value.trim(), birthday_optout: $('p-optout').checked
+    phone:$('p-phone').value.trim(), birthday_optout: $('p-optout').checked,
+    hide_phone: $('p-hide-phone').checked, hide_email: $('p-hide-email').checked,
+    hide_directory: $('p-hide-dir').checked
   };
   const b = $('btn-save-profile'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Saving…';
-  try { await api('/me', { method:'PATCH', auth:true, body:patch }); msg('profile-msg','Profile updated.','ok'); }
+  try { await api('/me', { method:'PATCH', auth:true, body:patch }); msg('profile-msg','Profile updated.','ok'); reloadDirectory(); }
   catch(e){ msg('profile-msg', e.message,'err'); }
   b.disabled = false; b.textContent = 'Save changes';
 };
 $('btn-logout').onclick = () => { clearToken(); show('email'); $('email').value=''; clearMsg('email-msg'); };
+
+/* ---------- directory ---------- */
+async function reloadDirectory(){
+  try { const r = await api('/directory', { auth:true }); dirCache = r.members || []; renderDirectory(); } catch(e){}
+}
+
+function renderDirectory(){
+  const box = $('directory-list');
+  const q = ($('dir-search').value || '').trim().toLowerCase();
+  let list = dirCache;
+  if (q) list = list.filter(m => ((m.first+' '+m.last).toLowerCase().includes(q)));
+  if (!list.length){ box.innerHTML = '<div class="empty">No members found.</div>'; return; }
+  box.innerHTML = list.map(m => {
+    const name = esc((m.first+' '+m.last).trim());
+    const mp = m.protected ? '<span class="mini-protect mp-yes">PROTECT ✓</span>' : '<span class="mini-protect mp-no">PROTECT ∅</span>';
+    let contact = '';
+    if (m.self){
+      contact = '<div class="dir-contact">You</div>';
+    } else {
+      const ph = m.phone_withheld
+        ? '<span class="blurred">000-000-0000</span>'
+        : (m.phone ? esc(m.phone) : '—');
+      const em = m.email_withheld
+        ? '<span class="blurred">hidden@example.com</span>'
+        : (m.email ? esc(m.email) : '—');
+      contact = '<div class="dir-contact">📞 '+ph+'  ·  ✉️ '+em+'</div>';
+      if (m.phone_withheld || m.email_withheld) contact += '<div class="dir-tease">share yours to see theirs</div>';
+    }
+    return '<div class="dir-row"><div><div class="who">'+name+mp+'</div>'+
+      '<div class="sub">'+esc(m.retired_from||'')+'</div>'+contact+'</div>'+
+      (m.self ? '' : '<button class="btn btn-ghost btn-sm dm-btn" data-id="'+esc(m.id)+'" data-name="'+name+'">Message</button>')+
+      '</div>';
+  }).join('');
+  box.querySelectorAll('.dm-btn').forEach(b => b.onclick = () => openDM(b.dataset.id, b.dataset.name));
+}
+$('dir-search').addEventListener('input', renderDirectory);
+
+/* ---------- invite ---------- */
+$('btn-invite').onclick = async () => {
+  clearMsg('invite-msg');
+  const email = $('inv-email').value.trim().toLowerCase();
+  const name = $('inv-name').value.trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return msg('invite-msg','Enter a valid email.','err');
+  const b = $('btn-invite'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Sending…';
+  try {
+    const r = await api('/invite', { method:'POST', auth:true, body:{ inviteeEmail: email, inviteeName: name } });
+    if (r.status === 'already_member') msg('invite-msg','That person is already a member.','warn');
+    else { msg('invite-msg','Invitation sent!','ok'); $('inv-email').value=''; $('inv-name').value=''; }
+  } catch(e){ msg('invite-msg', e.message,'err'); }
+  b.disabled = false; b.textContent = 'Send invite';
+};
+
+/* ---------- DM ---------- */
+let dmTargetId = '';
+function openDM(id, name){
+  dmTargetId = id;
+  $('dm-head').textContent = 'Message ' + name;
+  $('dm-body').value = '';
+  clearMsg('dm-msg');
+  $('dm-modal').classList.add('show');
+}
+$('dm-cancel').onclick = () => $('dm-modal').classList.remove('show');
+$('dm-send').onclick = async () => {
+  clearMsg('dm-msg');
+  const body = $('dm-body').value.trim();
+  if (!body) return msg('dm-msg','Write a message.','err');
+  const b = $('dm-send'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Sending…';
+  try {
+    await api('/dm', { method:'POST', auth:true, body:{ toId: dmTargetId, body } });
+    msg('dm-msg','Message sent!','ok');
+    setTimeout(() => $('dm-modal').classList.remove('show'), 1000);
+  } catch(e){ msg('dm-msg', e.message,'err'); }
+  b.disabled = false; b.textContent = 'Send message';
+};
+
+/* ---------- In Memoriam ---------- */
+async function reloadMemorials(){
+  try { const r = await api('/memorials', { auth:true }); memCache = r.memorials || []; if (memIndex >= memCache.length) memIndex = 0; renderMemorials(); } catch(e){}
+}
+
+function renderMemorials(){
+  const box = $('mem-carousel');
+  if (!memCache.length){ box.innerHTML = '<div class="empty">No memorials yet.</div>'; return; }
+  if (memIndex < 0) memIndex = memCache.length - 1;
+  if (memIndex >= memCache.length) memIndex = 0;
+  const m = memCache[memIndex];
+  const canEdit = isAdminUser || !m.locked;
+  const dates = [m.dob ? 'b. '+esc(m.dob) : '', m.date_of_passing ? 'd. '+esc(m.date_of_passing) : ''].filter(Boolean).join('   ·   ');
+  const photo = m.photo_url
+    ? '<img class="mem-photo" src="'+esc(m.photo_url)+'" alt="'+esc(m.name)+'" onerror="this.outerHTML=\'<div class=&quot;mem-photo-empty&quot;>🕊️</div>\'">'
+    : '<div class="mem-photo-empty">🕊️</div>';
+  box.innerHTML =
+    '<div class="mem-stage"><div class="mem-slide active">'+
+      photo+
+      '<div class="mem-info">'+
+        '<h3>'+esc(m.name)+(m.locked?'<span class="mem-lock-badge">🔒 Locked</span>':'')+'</h3>'+
+        (dates?'<div class="mem-dates">'+dates+'</div>':'')+
+        (m.end_of_watch?'<div class="mem-eow">'+esc(m.end_of_watch)+'</div>':'')+
+        (m.tribute?'<div class="mem-section"><div class="h">Tribute</div><p>'+esc(m.tribute)+'</p></div>':'')+
+        (m.service_details?'<div class="mem-section"><div class="h">Memorial Service Details</div><p>'+esc(m.service_details)+'</p></div>':'')+
+      '</div>'+
+      '<div class="mem-actions">'+
+        (canEdit?'<button class="btn btn-ghost btn-sm" id="mem-edit">Edit</button>':'')+
+        (canEdit?'<button class="btn btn-danger btn-sm" id="mem-del">Delete</button>':'')+
+        (isAdminUser?'<button class="btn btn-ghost btn-sm" id="mem-lock">'+(m.locked?'Unlock':'Lock')+'</button>':'')+
+      '</div>'+
+      '<div class="mem-nav">'+
+        '<button id="mem-prev">‹ Prev</button>'+
+        '<span class="mem-count">'+(memIndex+1)+' of '+memCache.length+'</span>'+
+        '<button id="mem-next">Next ›</button>'+
+      '</div>'+
+    '</div></div>';
+
+  const prev = $('mem-prev'), next = $('mem-next');
+  prev.disabled = memCache.length < 2; next.disabled = memCache.length < 2;
+  prev.onclick = () => { memIndex--; renderMemorials(); };
+  next.onclick = () => { memIndex++; renderMemorials(); };
+  if ($('mem-edit')) $('mem-edit').onclick = () => openMemEditor(m);
+  if ($('mem-del')) $('mem-del').onclick = () => delMemorial(m.id);
+  if ($('mem-lock')) $('mem-lock').onclick = () => lockMemorial(m.id, !m.locked);
+
+  // swipe support on mobile
+  let sx = 0;
+  const stage = box.querySelector('.mem-stage');
+  stage.ontouchstart = e => { sx = e.touches[0].clientX; };
+  stage.ontouchend = e => {
+    const dx = e.changedTouches[0].clientX - sx;
+    if (Math.abs(dx) > 50){ if (dx < 0) memIndex++; else memIndex--; renderMemorials(); }
+  };
+}
+
+let memEditId = null, memPhotoData = '';
+function openMemEditor(m){
+  memEditId = m ? m.id : null;
+  memPhotoData = '';
+  $('mem-modal-head').textContent = m ? 'Edit Memorial' : 'Add a Memorial';
+  $('m-name').value = m ? (m.name||'') : '';
+  $('m-dob').value = m ? isoDate(m.dob) : '';
+  $('m-dop').value = m ? isoDate(m.date_of_passing) : '';
+  $('m-eow').value = m ? (m.end_of_watch||'') : '';
+  $('m-service').value = m ? (m.service_details||'') : '';
+  $('m-tribute').value = m ? (m.tribute||'') : '';
+  $('m-photo').value = ''; $('m-upinfo').classList.add('hide');
+  clearMsg('mem-msg');
+  $('mem-modal').classList.add('show');
+}
+function isoDate(s){ const m = String(s||'').match(/^(\d{4}-\d{2}-\d{2})/); return m ? m[1] : ''; }
+$('btn-mem-new').onclick = () => openMemEditor(null);
+$('mem-cancel').onclick = () => $('mem-modal').classList.remove('show');
+
+// downscale photo client-side before upload (max 1200px)
+$('m-photo').onchange = () => {
+  const f = $('m-photo').files[0];
+  if (!f) { memPhotoData=''; return; }
+  $('m-upinfo').classList.remove('hide'); $('m-upinfo').textContent = 'Processing image…';
+  const img = new Image();
+  const reader = new FileReader();
+  reader.onload = e => {
+    img.onload = () => {
+      const max = 1200;
+      let w = img.width, h = img.height;
+      if (w > max || h > max){ if (w >= h){ h = Math.round(h*max/w); w = max; } else { w = Math.round(w*max/h); h = max; } }
+      const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+      cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      memPhotoData = cv.toDataURL('image/jpeg', 0.82);
+      $('m-upinfo').textContent = 'Image ready (' + Math.round(memPhotoData.length/1024) + ' KB)';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(f);
+};
+
+$('mem-save').onclick = async () => {
+  clearMsg('mem-msg');
+  const name = $('m-name').value.trim();
+  if (!name) return msg('mem-msg','Name is required.','err');
+  const payload = {
+    name,
+    dob: $('m-dob').value, date_of_passing: $('m-dop').value,
+    end_of_watch: $('m-eow').value.trim(),
+    service_details: $('m-service').value.trim(),
+    tribute: $('m-tribute').value.trim(),
+  };
+  if (memPhotoData) payload.photo_data = memPhotoData;
+  const b = $('mem-save'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Saving…';
+  try {
+    if (memEditId) await api('/memorials/'+encodeURIComponent(memEditId), { method:'PATCH', auth:true, body:payload });
+    else await api('/memorials', { method:'POST', auth:true, body:payload });
+    $('mem-modal').classList.remove('show');
+    await reloadMemorials();
+  } catch(e){ msg('mem-msg', e.message === 'locked' ? 'This memorial is locked by an administrator.' : e.message, 'err'); }
+  b.disabled = false; b.textContent = 'Save memorial';
+};
+
+async function delMemorial(id){
+  if (!confirm('Delete this memorial?')) return;
+  try { await api('/memorials/'+encodeURIComponent(id), { method:'DELETE', auth:true }); memIndex = 0; await reloadMemorials(); }
+  catch(e){ alert(e.message === 'locked' ? 'This memorial is locked by an administrator.' : 'Delete failed: ' + e.message); }
+}
+
+async function lockMemorial(id, locked){
+  try { await api('/memorials/'+encodeURIComponent(id)+'/lock', { method:'POST', auth:true, body:{ locked } }); await reloadMemorials(); }
+  catch(e){ alert('Lock failed: ' + e.message); }
+}
 
 function fireConfetti(){
   const c = $('confetti'); c.style.display='block';
@@ -542,6 +892,9 @@ function fireConfetti(){
 }
 
 (function init(){
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  }
   const params = new URLSearchParams(location.search);
   const t = params.get('token'); const em = params.get('email');
   if (t){ linkToken = t; $('confirm-email').textContent = em || 'your account'; show('confirm'); return; }
