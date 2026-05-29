@@ -1,8 +1,14 @@
 <!DOCTYPE html>
 <!--
   RAM index — LAAPOA Retiree Associate Membership Portal (member-facing)
-  Version: 1.06
+  Version: 1.07
   Backend: ram-api.shortadrs.com
+  Changelog 1.07: enrollment form redesigned to match LAAPOA membership form —
+    full address, department dropdown, signature pad (signature_pad v4.2.0),
+    LAAPOA Protect election (No / Yes $64.55/mo direct LACERS-LAFPP deduction)
+    with benefits summary. On Yes: opens PORAC RAM application in a new tab.
+    Apps Script generates a signed PDF via Pi Gotenberg, saves to Drive, and
+    attaches it to the admin alert email. Member row records protect_requested.
   Changelog 1.06: PROTECT pill — "LAAPOA / PROTECT" text block centered as a unit,
     ✓ / ⊘ symbol pulled out to the right on the vertical midline.
   Changelog 1.05: post-login install prompt (real install button on Android/Chrome/Edge,
@@ -28,6 +34,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.2.0/dist/signature_pad.umd.min.js"></script>
 <style>
   :root {
     --navy:#0a2342; --navy-2:#13355f; --gold:#c8a24a; --gold-soft:#e3c781;
@@ -178,6 +185,30 @@
   .mem-actions{display:flex;gap:8px;padding:0 20px 16px}
   .mem-lock-badge{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.05em;color:#8a5a00;background:var(--warn-bg);padding:2px 8px;border-radius:7px;margin-left:8px;vertical-align:middle}
   .uploading{font-size:12px;color:var(--muted);margin-top:6px}
+  /* enrollment */
+  .form-section{font-family:'Fraunces',serif;color:var(--navy);font-size:16px;margin:24px 0 12px;
+    padding-bottom:5px;border-bottom:1px solid var(--gold-soft);font-weight:600}
+  .form-section:first-of-type{margin-top:6px}
+  .req{color:var(--err);font-weight:700;font-size:13px}
+  .row-3{display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px}
+  @media(max-width:480px){.row-3{grid-template-columns:1fr}}
+  .protect-summary{background:#fafbfd;border:1px solid var(--line);border-left:4px solid var(--gold);
+    border-radius:10px;padding:14px 18px;margin-bottom:14px;font-size:13.5px;line-height:1.55}
+  .protect-summary p{margin-bottom:8px}
+  .protect-summary ul{margin:8px 0 8px 18px;padding:0}
+  .protect-summary li{margin-bottom:4px;font-size:13.5px}
+  .protect-summary .ps-note{font-size:12.5px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+  .protect-choice{display:flex;flex-direction:column;gap:10px;margin-bottom:8px}
+  .protect-opt{display:flex;gap:11px;padding:13px 15px;border:1.5px solid var(--line);border-radius:11px;
+    cursor:pointer;background:#fcfdff;align-items:flex-start;transition:.15s}
+  .protect-opt:hover{border-color:var(--gold-soft)}
+  .protect-opt input{width:auto;margin-top:3px;accent-color:var(--gold)}
+  .protect-opt:has(input:checked){border-color:var(--gold);background:#fff8e8;box-shadow:0 0 0 3px rgba(200,162,74,.15)}
+  .protect-opt .opt-text{font-size:13.5px;color:var(--ink);line-height:1.45}
+  .sig-wrap{border:1.5px solid var(--line);border-radius:10px;background:#fcfdff;overflow:hidden;
+    height:160px;position:relative;touch-action:none}
+  #sig-canvas{display:block;width:100%;height:100%;cursor:crosshair}
+  .sig-clear{margin-top:8px}
   /* install prompt */
   .install-hero{display:flex;align-items:center;gap:14px;margin-bottom:14px}
   .install-hero img{width:64px;height:64px;border-radius:14px;box-shadow:0 4px 14px rgba(10,35,66,.2)}
@@ -258,26 +289,79 @@
   </section>
 
   <section id="view-enroll" class="card hide">
-    <div class="card-head"><h2>Retiree Enrollment</h2><p>Submit your information to request RAM Portal access.</p></div>
+    <div class="card-head"><h2>RAM Enrollment</h2><p>Join the LAAPOA Retiree Associate Membership.</p></div>
     <div class="card-body">
       <div id="enroll-msg" class="msg"></div>
+
+      <h3 class="form-section">Personal Information</h3>
       <div class="row">
-        <div class="field"><label for="e-first">First name</label><input type="text" id="e-first" /></div>
-        <div class="field"><label for="e-last">Last name</label><input type="text" id="e-last" /></div>
-      </div>
-      <div class="field"><label for="e-email">Email address</label><input type="email" id="e-email" autocomplete="email" /></div>
-      <div class="row">
-        <div class="field"><label for="e-phone">Phone</label><input type="tel" id="e-phone" placeholder="310-555-1234" /></div>
-        <div class="field"><label for="e-cid">City Employee ID</label><input type="text" id="e-cid" /></div>
+        <div class="field"><label for="e-last">Last Name <span class="req">*</span></label><input type="text" id="e-last" autocomplete="family-name" /></div>
+        <div class="field"><label for="e-first">First Name <span class="req">*</span></label><input type="text" id="e-first" autocomplete="given-name" /></div>
       </div>
       <div class="row">
-        <div class="field"><label for="e-bday">Date of birth</label><input type="date" id="e-bday" /></div>
-        <div class="field"><label for="e-rdate">Retirement date</label><input type="date" id="e-rdate" /></div>
+        <div class="field"><label for="e-bday">Date of Birth <span class="req">*</span></label><input type="date" id="e-bday" /></div>
+        <div class="field"><label for="e-cid">City Employee ID <span class="req">*</span></label><input type="text" id="e-cid" /></div>
       </div>
-      <div class="field"><label for="e-rfrom">Retired from</label>
-        <select id="e-rfrom"><option value="">Select…</option><option>LAX</option><option>Municipal</option><option>Rangers</option></select>
+      <div class="field">
+        <label for="e-dept">Department <span class="req">*</span></label>
+        <select id="e-dept">
+          <option value="">Specify your department…</option>
+          <option>Airports</option>
+          <option>LAPD</option>
+          <option>Rec &amp; Parks</option>
+        </select>
       </div>
-      <button class="btn btn-primary" id="btn-enroll">Submit enrollment</button>
+      <div class="row">
+        <div class="field"><label for="e-phone">Phone <span class="req">*</span></label><input type="tel" id="e-phone" autocomplete="tel" placeholder="310-555-1234" /></div>
+        <div class="field"><label for="e-email">Personal Email <span class="req">*</span></label><input type="email" id="e-email" autocomplete="email" /></div>
+      </div>
+
+      <h3 class="form-section">Mailing Address</h3>
+      <div class="field"><label for="e-addr">Street Address <span class="req">*</span></label><input type="text" id="e-addr" autocomplete="street-address" /></div>
+      <div class="row-3">
+        <div class="field"><label for="e-city">City <span class="req">*</span></label><input type="text" id="e-city" autocomplete="address-level2" /></div>
+        <div class="field"><label for="e-state">State <span class="req">*</span></label><input type="text" id="e-state" maxlength="2" autocomplete="address-level1" placeholder="CA" /></div>
+        <div class="field"><label for="e-zip">ZIP Code <span class="req">*</span></label><input type="text" id="e-zip" maxlength="10" autocomplete="postal-code" /></div>
+      </div>
+
+      <h3 class="form-section">Retirement</h3>
+      <div class="row">
+        <div class="field"><label for="e-rdate">Retirement Date <span class="req">*</span></label><input type="date" id="e-rdate" /></div>
+        <div class="field"><label for="e-rfrom">Retired From <span class="req">*</span></label>
+          <select id="e-rfrom"><option value="">Select…</option><option>LAX</option><option>Municipal</option><option>Rangers</option></select>
+        </div>
+      </div>
+
+      <h3 class="form-section">LAAPOA Protect</h3>
+      <div class="protect-summary">
+        <p><strong>LAAPOA Protect</strong> gives RAM members continued access to PORAC's benefits programs after retirement, including:</p>
+        <ul>
+          <li>PORAC Legal Defense Fund (LDF) coverage — including the retiree firearms / CCW plan</li>
+          <li>Access to PORAC's Insurance &amp; Benefits Trust (IBT): low-cost health, dental, vision, and long-term care plans</li>
+          <li>Continued legislative advocacy for retired peace officers at the state and federal level</li>
+          <li>Eligibility to maintain or join the PORAC Anthem Blue Cross medical plan (where qualified)</li>
+        </ul>
+        <p class="ps-note">Cost: <strong>$64.55 per month</strong>, direct deduction from your LACERS / LAFPP pension. Enrollment in LAAPOA Protect requires a separate application to PORAC, which will open in a new tab after you submit this form.</p>
+      </div>
+      <div class="protect-choice">
+        <label class="protect-opt">
+          <input type="radio" name="protect" value="no" id="e-protect-no" checked />
+          <span class="opt-text"><strong>No</strong>, I just want to join the retired community.</span>
+        </label>
+        <label class="protect-opt">
+          <input type="radio" name="protect" value="yes" id="e-protect-yes" />
+          <span class="opt-text"><strong>Yes</strong>, I wish to join LAAPOA Protect for $64.55 per month (direct LACERS / LAFPP deduction) and enjoy all of the program's benefits.</span>
+        </label>
+      </div>
+
+      <h3 class="form-section">Signature <span class="req">*</span></h3>
+      <p class="hint">Sign in the box below using your mouse, finger, or stylus.</p>
+      <div class="sig-wrap">
+        <canvas id="sig-canvas"></canvas>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm sig-clear" id="sig-clear">Clear signature</button>
+
+      <button class="btn btn-primary mt" id="btn-enroll" style="margin-top:20px">Submit enrollment</button>
       <p class="center mt"><button class="link" id="to-login">Back to sign in</button></p>
     </div>
   </section>
@@ -377,7 +461,7 @@
     </div>
   </section>
 
-  <p class="foot">© LAAPOA · Retiree Associate Membership Portal · v1.06</p>
+  <p class="foot">© LAAPOA · Retiree Associate Membership Portal · v1.07</p>
 </div>
 
 <div class="modal" id="dm-modal">
@@ -498,7 +582,7 @@ $('btn-request').onclick = async () => {
     const r = await api('/auth/request-code', { method:'POST', body:{ email } });
     if (r.status === 'sent'){ pendingEmail = email; show('code'); clearMsg('code-msg'); $('code').focus(); }
     else if (r.status === 'pending') msg('email-msg','Your account is pending approval. An administrator has been notified.','warn');
-    else if (r.status === 'not_found'){ msg('email-msg','No account found. Redirecting you to enrollment…','warn'); setTimeout(()=>{ $('e-email').value = email; show('enroll'); }, 1400); }
+    else if (r.status === 'not_found'){ msg('email-msg','No account found. Redirecting you to enrollment…','warn'); setTimeout(()=>{ $('e-email').value = email; show('enroll'); initSigPad(); }, 1400); }
     else if (r.status === 'not_authorized') msg('email-msg','This account is not authorized to sign in.','err');
     else msg('email-msg','Unexpected response. Please try again.','err');
   } catch(e){ msg('email-msg','Something went wrong: ' + e.message,'err'); }
@@ -533,25 +617,79 @@ $('btn-confirm').onclick = async () => {
 };
 $('confirm-cancel').onclick = () => { history.replaceState({}, '', location.pathname); show('email'); };
 
-$('to-enroll').onclick = () => { show('enroll'); clearMsg('enroll-msg'); };
+/* ---------- enrollment ---------- */
+let sigPad = null;
+function initSigPad(){
+  if (sigPad) return;
+  const c = $('sig-canvas');
+  // Match CSS pixel size to drawing buffer for crisp lines on hi-dpi
+  const ratio = Math.max(window.devicePixelRatio || 1, 1);
+  c.width = c.offsetWidth * ratio;
+  c.height = c.offsetHeight * ratio;
+  c.getContext('2d').scale(ratio, ratio);
+  // eslint-disable-next-line no-undef
+  sigPad = new SignaturePad(c, { backgroundColor: 'rgba(255,255,255,0)', penColor: '#0a2342', minWidth: 0.7, maxWidth: 2.2 });
+  $('sig-clear').onclick = () => sigPad && sigPad.clear();
+  window.addEventListener('resize', () => {
+    // Preserve drawing through resize
+    const data = sigPad.toData();
+    c.width = c.offsetWidth * ratio; c.height = c.offsetHeight * ratio;
+    c.getContext('2d').scale(ratio, ratio);
+    sigPad.clear(); sigPad.fromData(data);
+  });
+}
+
+$('to-enroll').onclick = () => { show('enroll'); clearMsg('enroll-msg'); setTimeout(initSigPad, 30); };
 $('to-login').onclick = () => { show('email'); };
+
 $('btn-enroll').onclick = async () => {
   clearMsg('enroll-msg');
+  const protectYes = document.querySelector('input[name="protect"]:checked')?.value === 'yes';
   const m = {
-    first: $('e-first').value.trim(), last: $('e-last').value.trim(),
-    email: $('e-email').value.trim().toLowerCase(), phone: $('e-phone').value.trim(),
-    city_employee_id: $('e-cid').value.trim(), birthday: $('e-bday').value,
-    retire_date: $('e-rdate').value, retired_from: $('e-rfrom').value
+    first: $('e-first').value.trim(),
+    last: $('e-last').value.trim(),
+    email: $('e-email').value.trim().toLowerCase(),
+    phone: $('e-phone').value.trim(),
+    city_employee_id: $('e-cid').value.trim(),
+    department: $('e-dept').value,
+    address: $('e-addr').value.trim(),
+    city: $('e-city').value.trim(),
+    state: $('e-state').value.trim().toUpperCase(),
+    zip: $('e-zip').value.trim(),
+    birthday: $('e-bday').value,
+    retire_date: $('e-rdate').value,
+    retired_from: $('e-rfrom').value,
+    protect_requested: protectYes ? 'yes' : 'no',
   };
+
+  // Validate
   if (!m.first || !m.last) return msg('enroll-msg','First and last name are required.','err');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(m.email)) return msg('enroll-msg','Please enter a valid email.','err');
   if (!m.birthday) return msg('enroll-msg','Date of birth is required.','err');
+  if (!m.city_employee_id) return msg('enroll-msg','City Employee ID is required.','err');
+  if (!m.department) return msg('enroll-msg','Please select your department.','err');
+  if (!m.phone) return msg('enroll-msg','Phone is required.','err');
+  if (!m.address || !m.city || !m.state || !m.zip) return msg('enroll-msg','Please complete the mailing address.','err');
   if (!m.retired_from) return msg('enroll-msg','Please select where you retired from.','err');
+  if (!m.retire_date) return msg('enroll-msg','Retirement date is required.','err');
+  if (!sigPad || sigPad.isEmpty()) return msg('enroll-msg','Please sign the form.','err');
+
+  m.signature_data = sigPad.toDataURL('image/png');
+
   const b = $('btn-enroll'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Submitting…';
   try {
     const r = await api('/enroll', { method:'POST', body:m });
-    if (r.status === 'duplicate') msg('enroll-msg','An account with this email already exists. Try signing in.','warn');
-    else msg('enroll-msg','Enrollment submitted! An administrator will review and approve your account. You\'ll be able to sign in once approved.','ok');
+    if (r.status === 'duplicate'){
+      msg('enroll-msg','An account with this email already exists. Try signing in.','warn');
+    } else {
+      if (protectYes) {
+        // Open PORAC application in a new tab for them to complete the second step
+        window.open('https://porac.org/about/committees/retired-associate-membership/ram-application/', '_blank', 'noopener');
+        msg('enroll-msg','Enrollment submitted! A PORAC application has opened in a new tab — please complete it to activate LAAPOA Protect. An administrator will review your enrollment.','ok');
+      } else {
+        msg('enroll-msg','Enrollment submitted! An administrator will review and approve your account. You\'ll be able to sign in once approved.','ok');
+      }
+    }
   } catch(e){ msg('enroll-msg', e.message,'err'); }
   b.disabled = false; b.textContent = 'Submit enrollment';
 };
