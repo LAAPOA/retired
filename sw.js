@@ -1,7 +1,7 @@
 /* LAAPOA RAM Portal service worker — v1.02
    Network-first for the app shell so members always get the latest portal,
    with a cached fallback when offline. API calls are never cached. */
-const CACHE = 'ram-portal-v1-08';
+const CACHE = 'ram-portal-v1-09';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
