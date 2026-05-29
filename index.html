@@ -1,11 +1,18 @@
 <!DOCTYPE html>
 <!--
   RAM index — LAAPOA Retiree Associate Membership Portal (member-facing)
-  Version: 1.03
+  Version: 1.06
   Backend: ram-api.shortadrs.com
+  Changelog 1.06: PROTECT pill — "LAAPOA / PROTECT" text block centered as a unit,
+    ✓ / ⊘ symbol pulled out to the right on the vertical midline.
+  Changelog 1.05: post-login install prompt (real install button on Android/Chrome/Edge,
+    iOS Add-to-Home-Screen instructions on iOS Safari), with "Maybe later" snooze
+    (7 days) and "Don't show again" options. Skipped if already installed.
+  Changelog 1.04: PROTECT pill reworked — wider rounded pill, two centered lines
+    ("LAAPOA" / "PROTECT ✓" or "PROTECT ⊘"), cleaner sketch-matched layout.
+    Clean navy app icon (police-tape removed).
   Changelog 1.03: In Memoriam tab (carousel, Drive photo upload, member create/edit/delete,
-    admin lock/unlock), /bootstrap single round-trip dashboard load for speed,
-    rippled police-tape app icon.
+    admin lock/unlock), /bootstrap single round-trip dashboard load for speed.
 -->
 <html lang="en">
 <head>
@@ -119,19 +126,19 @@
   #confetti{position:fixed;inset:0;pointer-events:none;z-index:50;display:none}
   .section-add{border:1px dashed var(--line);border-radius:12px;padding:16px;margin-bottom:18px;background:#fafbfd}
   /* PROTECT pill */
-  .protect-pill{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;
-    line-height:1.05;padding:7px 14px;border-radius:12px;cursor:pointer;border:1.5px solid transparent;
-    font-weight:800;font-size:11px;letter-spacing:.06em;text-align:center;transition:.15s;min-width:96px}
-  .protect-pill small{font-size:9px;font-weight:700;opacity:.85;letter-spacing:.1em}
-  .protect-pill .lbl{display:flex;align-items:center;gap:4px}
-  .protect-yes{background:#d8f0e2;color:#15633f;border-color:#a9dcc1}
+  .protect-pill{display:inline-flex;align-items:center;justify-content:center;gap:12px;
+    padding:10px 24px;border-radius:999px;cursor:pointer;border:2px solid transparent;
+    font-weight:800;letter-spacing:.08em;transition:.15s;min-width:170px;font-family:'Archivo',sans-serif}
+  .protect-pill .stack{display:flex;flex-direction:column;align-items:center;line-height:1.1;text-align:center}
+  .protect-pill .top{font-size:13px}
+  .protect-pill .bot{font-size:15px;margin-top:2px}
+  .protect-yes{background:#d8f0e2;color:#15633f;border-color:#7fc09f}
   .protect-yes:hover{background:#c8e9d6}
-  .protect-no{background:#fadbdf;color:#9a2330;border-color:#f0b6bd}
+  .protect-no{background:#fadbdf;color:#9a2330;border-color:#e89aa3}
   .protect-no:hover{background:#f6cdd2}
-  .strike{position:relative;display:inline-block}
-  .strike::after{content:'';position:absolute;left:-3px;right:-3px;top:50%;height:0;
-    border-top:2px solid currentColor;transform:rotate(-12deg)}
-  .protect-circle{display:inline-grid;place-items:center;width:15px;height:15px;border:2px solid currentColor;border-radius:50%;font-size:10px;font-weight:900}
+  .protect-check{font-weight:900;font-size:22px;line-height:1}
+  .protect-circle{display:inline-grid;place-items:center;width:20px;height:20px;border:2.5px solid currentColor;border-radius:50%;position:relative}
+  .protect-circle::after{content:'';position:absolute;left:-3px;right:-3px;top:50%;height:0;border-top:2.5px solid currentColor;transform:rotate(-25deg)}
   /* directory */
   .dir-row{display:flex;align-items:center;justify-content:space-between;gap:12px;
     border:1px solid var(--line);border-radius:11px;padding:13px 16px;margin-bottom:10px;background:#fcfdff}
@@ -171,6 +178,16 @@
   .mem-actions{display:flex;gap:8px;padding:0 20px 16px}
   .mem-lock-badge{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.05em;color:#8a5a00;background:var(--warn-bg);padding:2px 8px;border-radius:7px;margin-left:8px;vertical-align:middle}
   .uploading{font-size:12px;color:var(--muted);margin-top:6px}
+  /* install prompt */
+  .install-hero{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+  .install-hero img{width:64px;height:64px;border-radius:14px;box-shadow:0 4px 14px rgba(10,35,66,.2)}
+  .install-hero h3{font-family:'Fraunces',serif;color:var(--navy);font-size:19px;margin-bottom:2px}
+  .install-hero p{font-size:13px;color:var(--muted)}
+  .install-steps{background:#fcfdff;border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px;font-size:14px}
+  .install-steps ol{padding-left:20px;line-height:1.85}
+  .install-steps b{color:var(--navy)}
+  .icon-share{display:inline-grid;place-items:center;width:18px;height:18px;border:1.5px solid var(--navy);border-radius:4px;font-size:13px;vertical-align:-3px;color:var(--navy);font-weight:700}
+  .install-bonus{font-size:12.5px;color:var(--muted);margin-top:10px;text-align:center}
 </style>
 </head>
 <body>
@@ -360,7 +377,7 @@
     </div>
   </section>
 
-  <p class="foot">© LAAPOA · Retiree Associate Membership Portal · v1.03</p>
+  <p class="foot">© LAAPOA · Retiree Associate Membership Portal · v1.06</p>
 </div>
 
 <div class="modal" id="dm-modal">
@@ -396,11 +413,54 @@
   </div>
 </div>
 
+<div class="modal" id="install-modal">
+  <div class="modal-card" style="max-width:440px">
+    <div class="modal-head">Install RAM Portal</div>
+    <div class="modal-body">
+      <div class="install-hero">
+        <img src="icon-192.png" alt="RAM">
+        <div><h3>Add to your home screen</h3><p>Faster access, full-screen, works like a real app.</p></div>
+      </div>
+      <div id="install-steps-ios" class="install-steps hide">
+        <ol>
+          <li>Tap the <span class="icon-share">↑</span> <b>Share</b> button at the bottom of Safari.</li>
+          <li>Scroll down and tap <b>Add to Home Screen</b>.</li>
+          <li>Tap <b>Add</b> in the top-right corner.</li>
+        </ol>
+      </div>
+      <div id="install-steps-android" class="install-steps hide">
+        <ol>
+          <li>Open your browser menu (⋮).</li>
+          <li>Tap <b>Install app</b> or <b>Add to Home screen</b>.</li>
+          <li>Confirm <b>Install</b>.</li>
+        </ol>
+      </div>
+      <div id="install-steps-desktop" class="install-steps hide">
+        <ol>
+          <li>Look for the install icon (⊕) in your browser's address bar.</li>
+          <li>Click it, then click <b>Install</b>.</li>
+        </ol>
+      </div>
+      <button class="btn btn-gold hide" id="btn-install-native">Install now</button>
+      <button class="btn btn-ghost" id="btn-install-later">Maybe later</button>
+      <p class="install-bonus"><button class="link" id="btn-install-never">Don't show this again</button></p>
+    </div>
+  </div>
+</div>
+
 <script>
 const API = 'https://ram-api.shortadrs.com';
 const TKEY = 'ram_session';
+const INSTALL_KEY = 'ram_install_state'; // {snoozeUntil, never}
 let pendingEmail = '', linkToken = '', myEmail = '', isAdminUser = false;
 let dirCache = [], memCache = [], memIndex = 0;
+let deferredInstall = null;
+
+// Capture the install prompt event as early as possible (must happen pre-gesture).
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstall = e;
+});
 
 const $ = id => document.getElementById(id);
 const show = v => { ['email','code','confirm','enroll','dash'].forEach(x => $('view-'+x).classList.add('hide')); $('view-'+v).classList.remove('hide'); };
@@ -453,6 +513,7 @@ $('btn-verify').onclick = async () => {
   try {
     const r = await api('/auth/verify-code', { method:'POST', body:{ email: pendingEmail, code } });
     setToken(r.token); await enterDashboard();
+    setTimeout(maybeShowInstallPrompt, 900);
   } catch(e){ msg('code-msg', e.message,'err'); }
   b.disabled = false; b.textContent = 'Sign in';
 };
@@ -467,6 +528,7 @@ $('btn-confirm').onclick = async () => {
     setToken(r.token);
     history.replaceState({}, '', location.pathname);
     await enterDashboard();
+    setTimeout(maybeShowInstallPrompt, 900);
   } catch(e){ msg('confirm-msg', e.message + ' — please request a new link.','err'); b.disabled=false; b.textContent='Yes, sign me in'; }
 };
 $('confirm-cancel').onclick = () => { history.replaceState({}, '', location.pathname); show('email'); };
@@ -535,11 +597,13 @@ function renderProtectPill(isProtected, since){
   const wrap = $('protect-pill-wrap');
   if (isProtected){
     wrap.innerHTML = '<div class="protect-pill protect-yes" title="Covered since '+esc(since||'')+'">'+
-      '<small>LAAPOA</small><span class="lbl">PROTECT <span class="protect-circle" style="border:none;color:#15633f">✓</span></span></div>';
+      '<span class="stack"><span class="top">LAAPOA</span><span class="bot">PROTECT</span></span>'+
+      '<span class="protect-check">✓</span></div>';
     wrap.querySelector('.protect-pill').onclick = () => window.open(PROTECT_INFO_URL, '_blank');
   } else {
     wrap.innerHTML = '<div class="protect-pill protect-no">'+
-      '<small>LAAPOA</small><span class="lbl"><span class="strike">PROTECT</span> <span class="protect-circle">∅</span></span></div>';
+      '<span class="stack"><span class="top">LAAPOA</span><span class="bot">PROTECT</span></span>'+
+      '<span class="protect-circle"></span></div>';
     wrap.querySelector('.protect-pill').onclick = () => window.open(PROTECT_PLANS_URL, '_blank');
   }
 }
@@ -866,6 +930,77 @@ async function lockMemorial(id, locked){
   try { await api('/memorials/'+encodeURIComponent(id)+'/lock', { method:'POST', auth:true, body:{ locked } }); await reloadMemorials(); }
   catch(e){ alert('Lock failed: ' + e.message); }
 }
+
+/* ---------- install prompt ---------- */
+function isStandalone(){
+  return window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true;
+}
+function installState(){
+  try { return JSON.parse(localStorage.getItem(INSTALL_KEY) || '{}'); } catch(e){ return {}; }
+}
+function setInstallState(patch){
+  const cur = installState();
+  localStorage.setItem(INSTALL_KEY, JSON.stringify(Object.assign(cur, patch)));
+}
+function detectPlatform(){
+  const ua = navigator.userAgent;
+  const iOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+  // PWA install only works in real Safari on iOS (not Chrome iOS — same engine, no support)
+  if (iOS) return 'ios';
+  const mobile = /Android/.test(ua);
+  if (mobile) return 'android';
+  return 'desktop';
+}
+
+function maybeShowInstallPrompt(){
+  // Skip entirely if already installed
+  if (isStandalone()) return;
+  const st = installState();
+  if (st.never) return;
+  if (st.snoozeUntil && Date.now() < st.snoozeUntil) return;
+
+  const platform = detectPlatform();
+  // Show platform-specific guidance
+  $('install-steps-ios').classList.toggle('hide', platform !== 'ios');
+  $('install-steps-android').classList.toggle('hide', platform !== 'android');
+  $('install-steps-desktop').classList.toggle('hide', platform !== 'desktop');
+
+  // If we captured a real install event (Android/Chrome/Edge), show the one-tap button
+  const nativeBtn = $('btn-install-native');
+  if (deferredInstall) {
+    nativeBtn.classList.remove('hide');
+    nativeBtn.onclick = async () => {
+      const e = deferredInstall;
+      deferredInstall = null;
+      nativeBtn.classList.add('hide');
+      try {
+        e.prompt();
+        const choice = await e.userChoice;
+        if (choice && choice.outcome === 'accepted'){
+          $('install-modal').classList.remove('show');
+          setInstallState({ never: true }); // installed; don't show again
+        }
+      } catch(err){ /* user dismissed */ }
+    };
+  } else {
+    nativeBtn.classList.add('hide');
+  }
+
+  $('install-modal').classList.add('show');
+}
+
+$('btn-install-later').onclick = () => {
+  setInstallState({ snoozeUntil: Date.now() + 7 * 24 * 60 * 60 * 1000 });
+  $('install-modal').classList.remove('show');
+};
+$('btn-install-never').onclick = () => {
+  setInstallState({ never: true });
+  $('install-modal').classList.remove('show');
+};
+
+// If app gets installed via the browser's own UI later, suppress future prompts.
+window.addEventListener('appinstalled', () => { setInstallState({ never: true }); });
 
 function fireConfetti(){
   const c = $('confetti'); c.style.display='block';
