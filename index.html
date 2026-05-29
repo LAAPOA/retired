@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <!--
   RAM index — LAAPOA Retiree Associate Membership Portal (member-facing)
-  Version: 1.07
+  Version: 1.08
   Backend: ram-api.shortadrs.com
+  Changelog 1.08: PROTECT pill halved in size; members can self-edit address
+    (street/city/state/zip) on the Profile tab.
   Changelog 1.07: enrollment form redesigned to match LAAPOA membership form —
     full address, department dropdown, signature pad (signature_pad v4.2.0),
     LAAPOA Protect election (No / Yes $64.55/mo direct LACERS-LAFPP deduction)
@@ -133,19 +135,19 @@
   #confetti{position:fixed;inset:0;pointer-events:none;z-index:50;display:none}
   .section-add{border:1px dashed var(--line);border-radius:12px;padding:16px;margin-bottom:18px;background:#fafbfd}
   /* PROTECT pill */
-  .protect-pill{display:inline-flex;align-items:center;justify-content:center;gap:12px;
-    padding:10px 24px;border-radius:999px;cursor:pointer;border:2px solid transparent;
-    font-weight:800;letter-spacing:.08em;transition:.15s;min-width:170px;font-family:'Archivo',sans-serif}
-  .protect-pill .stack{display:flex;flex-direction:column;align-items:center;line-height:1.1;text-align:center}
-  .protect-pill .top{font-size:13px}
-  .protect-pill .bot{font-size:15px;margin-top:2px}
+  .protect-pill{display:inline-flex;align-items:center;justify-content:center;gap:7px;
+    padding:5px 13px;border-radius:999px;cursor:pointer;border:1.5px solid transparent;
+    font-weight:800;letter-spacing:.06em;transition:.15s;min-width:92px;font-family:'Archivo',sans-serif}
+  .protect-pill .stack{display:flex;flex-direction:column;align-items:center;line-height:1.05;text-align:center}
+  .protect-pill .top{font-size:8px}
+  .protect-pill .bot{font-size:10px;margin-top:1px}
   .protect-yes{background:#d8f0e2;color:#15633f;border-color:#7fc09f}
   .protect-yes:hover{background:#c8e9d6}
   .protect-no{background:#fadbdf;color:#9a2330;border-color:#e89aa3}
   .protect-no:hover{background:#f6cdd2}
-  .protect-check{font-weight:900;font-size:22px;line-height:1}
-  .protect-circle{display:inline-grid;place-items:center;width:20px;height:20px;border:2.5px solid currentColor;border-radius:50%;position:relative}
-  .protect-circle::after{content:'';position:absolute;left:-3px;right:-3px;top:50%;height:0;border-top:2.5px solid currentColor;transform:rotate(-25deg)}
+  .protect-check{font-weight:900;font-size:13px;line-height:1}
+  .protect-circle{display:inline-grid;place-items:center;width:12px;height:12px;border:1.8px solid currentColor;border-radius:50%;position:relative}
+  .protect-circle::after{content:'';position:absolute;left:-2px;right:-2px;top:50%;height:0;border-top:1.8px solid currentColor;transform:rotate(-25deg)}
   /* directory */
   .dir-row{display:flex;align-items:center;justify-content:space-between;gap:12px;
     border:1px solid var(--line);border-radius:11px;padding:13px 16px;margin-bottom:10px;background:#fcfdff}
@@ -434,6 +436,14 @@
         </div>
         <div class="field"><label for="p-phone">Phone</label><input type="tel" id="p-phone" /></div>
         <div class="field"><label>Email</label><input type="text" id="p-email" disabled /></div>
+        <h4 style="font-family:'Fraunces',serif;color:var(--navy);font-size:14px;margin:18px 0 10px;padding-bottom:4px;border-bottom:1px solid var(--gold-soft)">Mailing Address</h4>
+        <div class="field"><label for="p-addr">Street Address</label><input type="text" id="p-addr" autocomplete="street-address" /></div>
+        <div class="row-3">
+          <div class="field"><label for="p-city">City</label><input type="text" id="p-city" autocomplete="address-level2" /></div>
+          <div class="field"><label for="p-state">State</label><input type="text" id="p-state" maxlength="2" autocomplete="address-level1" /></div>
+          <div class="field"><label for="p-zip">ZIP</label><input type="text" id="p-zip" maxlength="10" autocomplete="postal-code" /></div>
+        </div>
+        <h4 style="font-family:'Fraunces',serif;color:var(--navy);font-size:14px;margin:18px 0 10px;padding-bottom:4px;border-bottom:1px solid var(--gold-soft)">On File</h4>
         <div class="row">
           <div class="field"><label>Retired from</label><input type="text" id="p-rfrom" disabled /></div>
           <div class="field"><label>Date of birth</label><input type="text" id="p-bday" disabled /></div>
@@ -461,7 +471,7 @@
     </div>
   </section>
 
-  <p class="foot">© LAAPOA · Retiree Associate Membership Portal · v1.07</p>
+  <p class="foot">© LAAPOA · Retiree Associate Membership Portal · v1.08</p>
 </div>
 
 <div class="modal" id="dm-modal">
@@ -711,6 +721,8 @@ async function enterDashboard(){
   $('p-first').value = mem.first || ''; $('p-last').value = mem.last || '';
   $('p-phone').value = mem.phone || ''; $('p-email').value = bs.session.email;
   $('p-rfrom').value = mem.retired_from || ''; $('p-bday').value = mem.birthday || '';
+  $('p-addr').value = mem.address || ''; $('p-city').value = mem.city || '';
+  $('p-state').value = mem.state || ''; $('p-zip').value = mem.zip || '';
   $('p-optout').checked = !!mem.birthday_optout;
   $('p-hide-phone').checked = !!mem.hide_phone;
   $('p-hide-email').checked = !!mem.hide_email;
@@ -855,6 +867,8 @@ $('btn-save-profile').onclick = async () => {
   const patch = {
     first:$('p-first').value.trim(), last:$('p-last').value.trim(),
     phone:$('p-phone').value.trim(), birthday_optout: $('p-optout').checked,
+    address: $('p-addr').value.trim(), city: $('p-city').value.trim(),
+    state: $('p-state').value.trim().toUpperCase(), zip: $('p-zip').value.trim(),
     hide_phone: $('p-hide-phone').checked, hide_email: $('p-hide-email').checked,
     hide_directory: $('p-hide-dir').checked
   };
