@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<!--
+  RAM admin — LAAPOA Retiree Associate Membership Portal (admin-facing)
+  Version: 1.00
+  Backend: ram-api.shortadrs.com
+  Shares JWT with the member portal (TKEY = ram_session).
+  Sections: Members, Announcements, Events, Settings, Memorials, Admins (read-only).
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAM Admin — LAAPOA Retiree Associate Membership</title>
+<meta name="theme-color" content="#0a2342">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:#0a2342; --navy-2:#13355f; --gold:#c8a24a; --gold-soft:#e3c781;
+    --ink:#1a1f29; --muted:#6b7280; --line:#e3e6ec; --bg:#f4f6fa; --white:#fff;
+    --ok:#1e7a52; --ok-bg:#e6f4ec; --warn:#8a5a00; --warn-bg:#fdf3df;
+    --err:#9a2330; --err-bg:#fbe9eb;
+    --shadow:0 12px 40px rgba(10,35,66,.12); --shadow-sm:0 2px 10px rgba(10,35,66,.07);
+    --r:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Archivo',system-ui,sans-serif;color:var(--ink);background:var(--bg);
+    line-height:1.55;-webkit-font-smoothing:antialiased;min-height:100vh}
+  body::before{content:'';position:fixed;inset:0;z-index:-1;
+    background:radial-gradient(900px 500px at 85% -10%, rgba(200,162,74,.10), transparent 60%),
+               radial-gradient(800px 600px at -10% 110%, rgba(19,53,95,.10), transparent 55%)}
+  .wrap{max-width:1100px;margin:0 auto;padding:24px 20px 64px}
+
+  .topbar{display:flex;align-items:center;gap:14px;margin-bottom:24px;flex-wrap:wrap}
+  .crest{width:54px;height:54px;flex:none}
+  .crest svg{width:100%;height:100%;display:block}
+  .brand h1{font-family:'Fraunces',serif;font-size:21px;font-weight:600;color:var(--navy)}
+  .brand p{font-size:12px;color:var(--muted)}
+  .admin-badge{margin-left:auto;background:var(--err-bg);color:var(--err);font-size:11px;font-weight:800;
+    letter-spacing:.1em;padding:5px 13px;border-radius:20px;border:1.5px solid #f0b6bd}
+  .who{font-size:13px;color:var(--muted);text-align:right}
+  .who strong{color:var(--navy);display:block;font-size:13.5px}
+
+  .card{background:var(--white);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+  .card-head{background:linear-gradient(135deg,var(--navy),var(--navy-2));color:#fff;padding:20px 24px;position:relative}
+  .card-head::after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;
+    background:linear-gradient(90deg,var(--gold),var(--gold-soft),var(--gold))}
+  .card-head h2{font-family:'Fraunces',serif;font-weight:600;font-size:20px}
+  .card-head p{font-size:13px;opacity:.82;margin-top:3px}
+  .card-body{padding:22px}
+
+  label{display:block;font-size:13px;font-weight:600;color:var(--navy);margin:0 0 6px}
+  input,select,textarea{width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:9px;
+    font-family:inherit;font-size:14px;color:var(--ink);background:#fcfdff;transition:.15s}
+  textarea{resize:vertical;min-height:80px}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,162,74,.18)}
+  .field{margin-bottom:14px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  @media(max-width:600px){.row,.row-3{grid-template-columns:1fr}}
+
+  .btn{padding:10px 16px;border:none;border-radius:9px;cursor:pointer;font-family:inherit;
+    font-size:14px;font-weight:600;transition:.15s}
+  .btn-primary{background:var(--navy);color:#fff}
+  .btn-primary:hover{background:var(--navy-2)}
+  .btn-primary:disabled{opacity:.55;cursor:not-allowed}
+  .btn-gold{background:var(--gold);color:var(--navy)}
+  .btn-gold:hover{background:var(--gold-soft)}
+  .btn-ghost{background:transparent;color:var(--navy);border:1.5px solid var(--line)}
+  .btn-ghost:hover{border-color:var(--navy)}
+  .btn-danger{background:transparent;color:var(--err);border:1.5px solid #f0b6bd}
+  .btn-danger:hover{background:var(--err-bg)}
+  .btn-sm{padding:6px 12px;font-size:12.5px}
+  .btn-full{width:100%}
+
+  .check{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+  .check input{width:auto}
+  .check label{margin:0;font-weight:500;color:var(--ink);font-size:14px}
+
+  .msg{padding:11px 14px;border-radius:9px;font-size:13.5px;margin-bottom:14px;display:none}
+  .msg.show{display:block}
+  .msg.ok{background:var(--ok-bg);color:var(--ok)}
+  .msg.warn{background:var(--warn-bg);color:var(--warn)}
+  .msg.err{background:var(--err-bg);color:var(--err)}
+
+  .nav{display:flex;gap:2px;margin-bottom:18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .nav button{padding:11px 18px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;
+    border:none;background:none;font-family:inherit;border-bottom:2.5px solid transparent;margin-bottom:-1px}
+  .nav button.active{color:var(--navy);border-bottom-color:var(--gold)}
+
+  .panel{display:none}
+  .panel.active{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);
+    border-top-color:#fff;border-radius:50%;animation:s .7s linear infinite;vertical-align:-2px;margin-right:6px}
+  @keyframes s{to{transform:rotate(360deg)}}
+
+  .empty{text-align:center;color:var(--muted);font-size:14px;padding:30px 0}
+  .center{text-align:center}
+  .hide{display:none!important}
+  .mt{margin-top:14px}
+  .foot{text-align:center;font-size:11.5px;color:var(--muted);margin-top:24px;letter-spacing:.03em}
+
+  /* members table */
+  .toolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+  .toolbar input{flex:1;min-width:200px}
+  .toolbar select{max-width:170px}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  thead th{text-align:left;font-weight:700;color:var(--navy);background:#f6f8fb;padding:10px 12px;
+    border-bottom:1.5px solid var(--line);position:sticky;top:0}
+  tbody td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+  tbody tr:hover{background:#fafbfd}
+  .status-pill{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;
+    padding:3px 10px;border-radius:20px;text-transform:uppercase}
+  .st-pending{background:var(--warn-bg);color:var(--warn)}
+  .st-active{background:var(--ok-bg);color:var(--ok)}
+  .st-deceased{background:#ecedf0;color:#666}
+  .prot-tick{font-weight:800;color:var(--ok);font-size:13px}
+  .prot-cross{font-weight:800;color:var(--err);font-size:13px}
+  .table-scroll{max-height:560px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+
+  /* item rows for announcements/events */
+  .item{border:1px solid var(--line);border-radius:11px;padding:14px 16px;margin-bottom:10px;background:#fcfdff}
+  .item h4{font-family:'Fraunces',serif;color:var(--navy);font-size:16px}
+  .item .meta{font-size:12.5px;color:var(--muted);margin:2px 0 8px}
+  .item p{font-size:13.5px;white-space:pre-wrap}
+  .item-actions{display:flex;gap:8px;margin-top:10px}
+
+  /* modal */
+  .modal{position:fixed;inset:0;background:rgba(10,35,66,.55);display:none;align-items:center;justify-content:center;z-index:60;padding:20px}
+  .modal.show{display:flex}
+  .modal-card{background:#fff;border-radius:14px;max-width:520px;width:100%;box-shadow:var(--shadow);overflow:hidden;max-height:90vh;display:flex;flex-direction:column}
+  .modal-head{background:linear-gradient(135deg,var(--navy),var(--navy-2));color:#fff;padding:14px 20px;font-family:'Fraunces',serif;font-size:17px}
+  .modal-body{padding:20px;overflow-y:auto}
+  .modal-actions{display:flex;gap:8px;margin-top:14px}
+
+  /* login mini */
+  .login-card{max-width:440px;margin:60px auto 0}
+  .code-input{letter-spacing:10px;text-align:center;font-size:26px;font-weight:700;font-family:'Fraunces',serif;color:var(--navy)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="crest">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-label="LAAPOA RAM">
+        <defs>
+          <path id="arc" d="M 22 50 A 30 30 0 0 1 78 50" fill="none"/>
+          <radialGradient id="bg" cx="35%" cy="30%">
+            <stop offset="0%" stop-color="#13355f"/><stop offset="100%" stop-color="#0a2342"/>
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="46" fill="url(#bg)" stroke="#c8a24a" stroke-width="3"/>
+        <text font-family="Archivo,sans-serif" font-size="12" font-weight="700" fill="#c8a24a" letter-spacing="2">
+          <textPath href="#arc" startOffset="50%" text-anchor="middle">LAAPOA</textPath>
+        </text>
+        <text x="50" y="66" text-anchor="middle" font-family="Fraunces,serif" font-weight="700" font-size="26" fill="#c8a24a" letter-spacing="1">RAM</text>
+      </svg>
+    </div>
+    <div class="brand">
+      <h1>RAM Portal — Admin</h1>
+      <p>Los Angeles Airport Peace Officers Association</p>
+    </div>
+    <span class="admin-badge" id="admin-badge">ADMIN</span>
+    <div class="who hide" id="who"><strong id="who-name"></strong><span id="who-email"></span></div>
+  </div>
+
+  <!-- ===== LOGIN (mini) ===== -->
+  <section id="view-login" class="card login-card hide">
+    <div class="card-head"><h2>Administrator Sign In</h2><p>Enter your admin email to receive a one-time code.</p></div>
+    <div class="card-body">
+      <div id="login-msg" class="msg"></div>
+      <div class="field"><label for="email">Email</label><input type="email" id="email" autocomplete="email" /></div>
+      <button class="btn btn-primary btn-full" id="btn-request">Send my code</button>
+    </div>
+  </section>
+  <section id="view-code" class="card login-card hide">
+    <div class="card-head"><h2>Enter Your Code</h2><p>Check your email for the 6-digit code.</p></div>
+    <div class="card-body">
+      <div id="code-msg" class="msg"></div>
+      <div class="field"><label for="code">6-digit code</label><input type="text" id="code" class="code-input" inputmode="numeric" maxlength="6" placeholder="••••••"></div>
+      <button class="btn btn-primary btn-full" id="btn-verify">Sign in</button>
+      <p class="center mt"><button class="btn btn-ghost btn-sm" id="back-to-email">Use a different email</button></p>
+    </div>
+  </section>
+  <section id="view-notadmin" class="card login-card hide">
+    <div class="card-head"><h2>Not Authorized</h2><p>This account doesn't have admin access.</p></div>
+    <div class="card-body">
+      <p style="font-size:14px;margin-bottom:14px">You're signed in, but your email isn't on the Admins list. If this is a mistake, ask another administrator to add you.</p>
+      <button class="btn btn-ghost btn-full" id="btn-signout-na">Sign out</button>
+    </div>
+  </section>
+
+  <!-- ===== APP ===== -->
+  <section id="view-app" class="hide">
+    <div class="nav">
+      <button class="active" data-section="members">Members</button>
+      <button data-section="announcements">Announcements</button>
+      <button data-section="events">Events</button>
+      <button data-section="settings">Settings</button>
+      <button data-section="memorials">Memorials</button>
+      <button data-section="admins">Admins</button>
+    </div>
+
+    <!-- MEMBERS -->
+    <div class="panel active" id="section-members">
+      <div class="card">
+        <div class="card-head"><h2>Members</h2><p>Approve pending enrollments, manage status, set LAAPOA PROTECT, edit details.</p></div>
+        <div class="card-body">
+          <div id="members-msg" class="msg"></div>
+          <div class="toolbar">
+            <input type="text" id="m-search" placeholder="Search by name, email, employee ID…">
+            <select id="m-status">
+              <option value="">All statuses</option>
+              <option value="pending">Pending</option>
+              <option value="active">Active</option>
+              <option value="deceased">Deceased</option>
+            </select>
+            <select id="m-protect">
+              <option value="">All protect</option>
+              <option value="yes">Protected</option>
+              <option value="no">Not protected</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" id="m-refresh">Refresh</button>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead><tr>
+                <th>Name</th><th>Email</th><th>Retired</th><th>Status</th><th>Protect</th><th></th>
+              </tr></thead>
+              <tbody id="members-tbody"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANNOUNCEMENTS -->
+    <div class="panel" id="section-announcements">
+      <div class="card">
+        <div class="card-head"><h2>Announcements</h2><p>Post messages to all members. Appears in the Announcements tab.</p></div>
+        <div class="card-body">
+          <div id="ann-msg" class="msg"></div>
+          <div class="field"><label for="a-title">Title (optional)</label><input type="text" id="a-title"></div>
+          <div class="field"><label for="a-body">Body</label><textarea id="a-body" placeholder="What do you want to say?"></textarea></div>
+          <button class="btn btn-primary" id="btn-ann-post">Post announcement</button>
+          <hr style="border:none;border-top:1px solid var(--line);margin:22px 0">
+          <div id="ann-list"><div class="empty">Loading…</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EVENTS -->
+    <div class="panel" id="section-events">
+      <div class="card">
+        <div class="card-head"><h2>Events</h2><p>Create breakfast meetings and other events.</p></div>
+        <div class="card-body">
+          <div id="ev-msg" class="msg"></div>
+          <div class="field"><label for="e-title">Title</label><input type="text" id="e-title"></div>
+          <div class="row">
+            <div class="field"><label for="e-date">Date</label><input type="text" id="e-date" placeholder="e.g. Saturday, June 14 — 9:00 AM"></div>
+            <div class="field"><label for="e-loc">Location</label><input type="text" id="e-loc" placeholder="e.g. IHOP Lawndale"></div>
+          </div>
+          <div class="field"><label for="e-desc">Description</label><textarea id="e-desc"></textarea></div>
+          <div class="check"><input type="checkbox" id="e-rsvp"><label for="e-rsvp">RSVP open</label></div>
+          <button class="btn btn-primary" id="btn-ev-post">Create event</button>
+          <hr style="border:none;border-top:1px solid var(--line);margin:22px 0">
+          <div id="ev-list"><div class="empty">Loading…</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="panel" id="section-settings">
+      <div class="card">
+        <div class="card-head"><h2>Portal Settings</h2><p>Toggle features and manage the YouTube video.</p></div>
+        <div class="card-body">
+          <div id="set-msg" class="msg"></div>
+          <div class="check"><input type="checkbox" id="set-ann"><label for="set-ann">Announcements visible</label></div>
+          <div class="check"><input type="checkbox" id="set-bday"><label for="set-bday">Daily birthday shout-out enabled</label></div>
+          <hr style="border:none;border-top:1px solid var(--line);margin:16px 0">
+          <div class="check"><input type="checkbox" id="set-yt"><label for="set-yt">YouTube video shown on Announcements tab</label></div>
+          <div class="field"><label for="set-yt-title">Video title (optional)</label><input type="text" id="set-yt-title" placeholder="e.g. Memorial Service Highlights"></div>
+          <div class="field"><label for="set-yt-url">YouTube URL or ID</label><input type="text" id="set-yt-url" placeholder="https://youtu.be/… or 11-char ID"></div>
+          <button class="btn btn-primary" id="btn-set-save">Save settings</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MEMORIALS -->
+    <div class="panel" id="section-memorials">
+      <div class="card">
+        <div class="card-head"><h2>Memorials</h2><p>Lock/unlock member-created memorials. Locked memorials can only be edited by admins.</p></div>
+        <div class="card-body">
+          <div id="mem-msg" class="msg"></div>
+          <div id="mem-list"><div class="empty">Loading…</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADMINS (read-only) -->
+    <div class="panel" id="section-admins">
+      <div class="card">
+        <div class="card-head"><h2>Administrators</h2><p>Read-only. To add or remove an admin, edit the Admins tab in the Google Sheet.</p></div>
+        <div class="card-body">
+          <div id="admins-list"><div class="empty">The list of admins isn't exposed by the API for safety. Open the Admins tab in the source sheet to manage admins.</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <p class="foot">© LAAPOA · RAM Portal Admin · v1.00 · <button class="btn btn-ghost btn-sm" id="btn-signout" style="display:inline-block;margin-left:8px">Sign out</button></p>
+</div>
+
+<!-- ===== Member edit modal ===== -->
+<div class="modal" id="m-modal">
+  <div class="modal-card">
+    <div class="modal-head" id="m-modal-head">Edit Member</div>
+    <div class="modal-body">
+      <div id="m-modal-msg" class="msg"></div>
+      <div class="row">
+        <div class="field"><label for="mm-first">First name</label><input type="text" id="mm-first"></div>
+        <div class="field"><label for="mm-last">Last name</label><input type="text" id="mm-last"></div>
+      </div>
+      <div class="field"><label>Email</label><input type="text" id="mm-email" disabled></div>
+      <div class="row">
+        <div class="field"><label for="mm-phone">Phone</label><input type="text" id="mm-phone"></div>
+        <div class="field"><label for="mm-cid">City Employee ID</label><input type="text" id="mm-cid"></div>
+      </div>
+      <div class="row-3">
+        <div class="field"><label for="mm-bday">Birthday</label><input type="date" id="mm-bday"></div>
+        <div class="field"><label for="mm-rdate">Retired</label><input type="date" id="mm-rdate"></div>
+        <div class="field"><label for="mm-rfrom">From</label>
+          <select id="mm-rfrom"><option value="">—</option><option>LAX</option><option>Municipal</option><option>Rangers</option></select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="mm-status">Status</label>
+          <select id="mm-status"><option value="pending">Pending</option><option value="active">Active</option><option value="deceased">Deceased</option></select>
+        </div>
+        <div class="field"><label for="mm-protect">LAAPOA PROTECT</label>
+          <select id="mm-protect"><option value="">No</option><option value="yes">Yes</option></select>
+        </div>
+      </div>
+      <div class="field"><label for="mm-pdate">Protect coverage start date</label><input type="date" id="mm-pdate"></div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="mm-save">Save changes</button>
+        <button class="btn btn-ghost" id="mm-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Edit announcement / event modal ===== -->
+<div class="modal" id="x-modal">
+  <div class="modal-card">
+    <div class="modal-head" id="x-modal-head">Edit</div>
+    <div class="modal-body">
+      <div id="x-modal-msg" class="msg"></div>
+      <div id="x-fields"></div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="x-save">Save changes</button>
+        <button class="btn btn-ghost" id="x-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'https://ram-api.shortadrs.com';
+const TKEY = 'ram_session';
+
+const $ = id => document.getElementById(id);
+const show = v => { ['login','code','notadmin','app'].forEach(x => $('view-'+x).classList.add('hide')); $('view-'+v).classList.remove('hide'); };
+function msg(el, text, kind){ const m=$(el); m.textContent=text; m.className='msg show '+(kind||'ok'); }
+function clearMsg(el){ const m=$(el); m.className='msg'; m.textContent=''; }
+function token(){ return localStorage.getItem(TKEY); }
+function setToken(t){ localStorage.setItem(TKEY, t); }
+function clearToken(){ localStorage.removeItem(TKEY); }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function isoDate(s){ const m = String(s||'').match(/^(\d{4}-\d{2}-\d{2})/); return m ? m[1] : ''; }
+function isProtectedVal(v){ const s=String(v==null?'':v).trim().toLowerCase(); return s==='yes'||s==='true'||s==='y'; }
+
+async function api(path, opts){
+  opts = opts || {};
+  const headers = { 'Content-Type':'application/json' };
+  if (opts.auth !== false && token()) headers['Authorization'] = 'Bearer ' + token();
+  const res = await fetch(API + path, { method: opts.method || 'GET', headers, body: opts.body ? JSON.stringify(opts.body) : undefined });
+  let data = null; try { data = await res.json(); } catch(e){}
+  if (!res.ok) throw new Error((data && data.error) || ('HTTP ' + res.status));
+  return data;
+}
+
+/* ---------- login ---------- */
+let pendingEmail = '';
+
+$('btn-request').onclick = async () => {
+  clearMsg('login-msg');
+  const email = $('email').value.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return msg('login-msg','Enter a valid email.','err');
+  const b = $('btn-request'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Sending…';
+  try {
+    const r = await api('/auth/request-code', { method:'POST', body:{ email }, auth:false });
+    if (r.status === 'sent'){ pendingEmail = email; show('code'); $('code').focus(); }
+    else if (r.status === 'pending') msg('login-msg','That account is pending approval.','warn');
+    else if (r.status === 'not_found') msg('login-msg','No matching account.','err');
+    else if (r.status === 'not_authorized') msg('login-msg','This account is not authorized.','err');
+    else msg('login-msg','Unexpected response.','err');
+  } catch(e){ msg('login-msg', e.message,'err'); }
+  b.disabled = false; b.textContent = 'Send my code';
+};
+
+$('btn-verify').onclick = async () => {
+  clearMsg('code-msg');
+  const code = $('code').value.trim();
+  if (!/^\d{6}$/.test(code)) return msg('code-msg','Enter the 6-digit code.','err');
+  const b = $('btn-verify'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Verifying…';
+  try {
+    const r = await api('/auth/verify-code', { method:'POST', body:{ email: pendingEmail, code }, auth:false });
+    setToken(r.token);
+    if (!r.admin){ show('notadmin'); return; }
+    await boot();
+  } catch(e){ msg('code-msg', e.message,'err'); }
+  b.disabled = false; b.textContent = 'Sign in';
+};
+
+$('back-to-email').onclick = () => { show('login'); $('email').value = ''; };
+$('btn-signout-na').onclick = () => { clearToken(); show('login'); };
+$('btn-signout').onclick = () => { clearToken(); location.reload(); };
+$('email').addEventListener('keydown', e => { if (e.key === 'Enter') $('btn-request').click(); });
+$('code').addEventListener('keydown', e => { if (e.key === 'Enter') $('btn-verify').click(); });
+
+/* ---------- boot ---------- */
+async function boot(){
+  // verify the token belongs to an admin
+  let me;
+  try { me = await api('/me'); }
+  catch(e){ clearToken(); show('login'); return; }
+  if (!me.session.admin){ show('notadmin'); return; }
+  const m = me.member || {};
+  $('who').classList.remove('hide');
+  $('who-name').textContent = ((m.first||'') + ' ' + (m.last||'')).trim() || me.session.email;
+  $('who-email').textContent = me.session.email;
+  show('app');
+  loadMembers(); loadAnnouncements(); loadEvents(); loadSettings(); loadMemorials();
+}
+
+/* ---------- nav ---------- */
+document.querySelectorAll('.nav button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.nav button').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); $('section-'+b.dataset.section).classList.add('active');
+});
+
+/* ---------- members ---------- */
+let memberCache = [];
+async function loadMembers(){
+  try {
+    const r = await api('/admin/members');
+    memberCache = r.members || [];
+    renderMembers();
+  } catch(e){ $('members-tbody').innerHTML = '<tr><td colspan="6" class="empty">'+esc(e.message)+'</td></tr>'; }
+}
+function renderMembers(){
+  const q = ($('m-search').value || '').trim().toLowerCase();
+  const stf = $('m-status').value;
+  const ptf = $('m-protect').value;
+  let list = memberCache;
+  if (q) list = list.filter(m =>
+    ((m.first||'')+' '+(m.last||'')).toLowerCase().includes(q) ||
+    String(m.email||'').toLowerCase().includes(q) ||
+    String(m.city_employee_id||'').toLowerCase().includes(q));
+  if (stf) list = list.filter(m => String(m.status).toLowerCase() === stf);
+  if (ptf === 'yes') list = list.filter(m => isProtectedVal(m.laapoa_protect));
+  if (ptf === 'no') list = list.filter(m => !isProtectedVal(m.laapoa_protect));
+  // pending first, then active, then deceased; secondary by last name
+  const rank = s => s === 'pending' ? 0 : s === 'active' ? 1 : 2;
+  list.sort((a,b) => rank(String(a.status).toLowerCase()) - rank(String(b.status).toLowerCase()) ||
+    String(a.last).localeCompare(String(b.last)));
+  if (!list.length){ $('members-tbody').innerHTML = '<tr><td colspan="6" class="empty">No members match.</td></tr>'; return; }
+  $('members-tbody').innerHTML = list.map(m => {
+    const st = String(m.status||'').toLowerCase();
+    const stPill = '<span class="status-pill st-'+esc(st)+'">'+esc(st||'—')+'</span>';
+    const prot = isProtectedVal(m.laapoa_protect)
+      ? '<span class="prot-tick">✓ '+esc(isoDate(m.protect_date)||'')+'</span>'
+      : '<span class="prot-cross">✗</span>';
+    return '<tr>'+
+      '<td><strong>'+esc(((m.first||'')+' '+(m.last||'')).trim())+'</strong><br><span style="font-size:11.5px;color:var(--muted)">ID '+esc(m.city_employee_id||'—')+'</span></td>'+
+      '<td>'+esc(m.email||'')+'</td>'+
+      '<td>'+esc(m.retired_from||'—')+'<br><span style="font-size:11.5px;color:var(--muted)">'+esc(isoDate(m.retire_date)||'')+'</span></td>'+
+      '<td>'+stPill+'</td>'+
+      '<td>'+prot+'</td>'+
+      '<td style="text-align:right;white-space:nowrap">'+
+        (st === 'pending' ? '<button class="btn btn-gold btn-sm act-approve" data-email="'+esc(m.email)+'">Approve</button> ' : '')+
+        '<button class="btn btn-ghost btn-sm act-edit" data-email="'+esc(m.email)+'">Edit</button>'+
+      '</td></tr>';
+  }).join('');
+  document.querySelectorAll('.act-approve').forEach(b => b.onclick = () => approveMember(b.dataset.email));
+  document.querySelectorAll('.act-edit').forEach(b => b.onclick = () => openMemberEditor(b.dataset.email));
+}
+['m-search','m-status','m-protect'].forEach(id => $(id).addEventListener('input', renderMembers));
+$('m-refresh').onclick = loadMembers;
+
+async function approveMember(email){
+  if (!confirm('Approve and activate '+email+'?')) return;
+  try {
+    await api('/admin/members/'+encodeURIComponent(email), { method:'PATCH', body:{ status:'active' } });
+    msg('members-msg','Member approved.','ok');
+    loadMembers();
+  } catch(e){ msg('members-msg', e.message,'err'); }
+}
+
+function openMemberEditor(email){
+  const m = memberCache.find(x => x.email === email);
+  if (!m) return;
+  $('m-modal-head').textContent = 'Edit ' + ((m.first||'')+' '+(m.last||'')).trim();
+  $('mm-first').value = m.first || '';
+  $('mm-last').value = m.last || '';
+  $('mm-email').value = m.email || '';
+  $('mm-phone').value = m.phone || '';
+  $('mm-cid').value = m.city_employee_id || '';
+  $('mm-bday').value = isoDate(m.birthday);
+  $('mm-rdate').value = isoDate(m.retire_date);
+  $('mm-rfrom').value = m.retired_from || '';
+  $('mm-status').value = String(m.status||'pending').toLowerCase();
+  $('mm-protect').value = isProtectedVal(m.laapoa_protect) ? 'yes' : '';
+  $('mm-pdate').value = isoDate(m.protect_date);
+  clearMsg('m-modal-msg');
+  $('m-modal').classList.add('show');
+  $('mm-save').onclick = async () => {
+    clearMsg('m-modal-msg');
+    const patch = {
+      first: $('mm-first').value.trim(), last: $('mm-last').value.trim(),
+      phone: $('mm-phone').value.trim(), city_employee_id: $('mm-cid').value.trim(),
+      birthday: $('mm-bday').value, retire_date: $('mm-rdate').value,
+      retired_from: $('mm-rfrom').value, status: $('mm-status').value,
+      laapoa_protect: $('mm-protect').value, protect_date: $('mm-pdate').value,
+    };
+    const b = $('mm-save'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Saving…';
+    try {
+      await api('/admin/members/'+encodeURIComponent(email), { method:'PATCH', body:patch });
+      $('m-modal').classList.remove('show');
+      msg('members-msg','Updated '+email,'ok');
+      loadMembers();
+    } catch(e){ msg('m-modal-msg', e.message,'err'); }
+    b.disabled = false; b.textContent = 'Save changes';
+  };
+}
+$('mm-cancel').onclick = () => $('m-modal').classList.remove('show');
+
+/* ---------- announcements ---------- */
+async function loadAnnouncements(){
+  try {
+    const r = await api('/announcements');
+    const list = r.announcements || [];
+    if (!list.length){ $('ann-list').innerHTML = '<div class="empty">No announcements yet.</div>'; return; }
+    $('ann-list').innerHTML = list.map(a =>
+      '<div class="item" data-id="'+esc(a.id)+'">'+
+        (a.title ? '<h4>'+esc(a.title)+'</h4>' : '')+
+        '<div class="meta">'+esc(a.posted_date||'')+'</div>'+
+        (a.body ? '<p>'+esc(a.body)+'</p>' : '')+
+        '<div class="item-actions"><button class="btn btn-ghost btn-sm act-edit">Edit</button>'+
+        '<button class="btn btn-danger btn-sm act-del">Delete</button></div>'+
+      '</div>'
+    ).join('');
+    document.querySelectorAll('#ann-list .item').forEach(el => {
+      const id = el.dataset.id;
+      const a = list.find(x => x.id === id);
+      el.querySelector('.act-edit').onclick = () => openAnnouncementEditor(a);
+      el.querySelector('.act-del').onclick = () => deleteAnnouncement(id);
+    });
+  } catch(e){ $('ann-list').innerHTML = '<div class="empty">'+esc(e.message)+'</div>'; }
+}
+$('btn-ann-post').onclick = async () => {
+  clearMsg('ann-msg');
+  const title = $('a-title').value.trim();
+  const body = $('a-body').value.trim();
+  if (!title && !body) return msg('ann-msg','Provide a title or body.','err');
+  const b = $('btn-ann-post'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Posting…';
+  try { await api('/admin/announcements', { method:'POST', body:{ title, body } });
+    $('a-title').value = ''; $('a-body').value = ''; msg('ann-msg','Posted.','ok'); loadAnnouncements();
+  } catch(e){ msg('ann-msg', e.message,'err'); }
+  b.disabled = false; b.textContent = 'Post announcement';
+};
+async function deleteAnnouncement(id){
+  if (!confirm('Delete this announcement?')) return;
+  try { await api('/admin/announcements/'+encodeURIComponent(id), { method:'DELETE' }); loadAnnouncements(); }
+  catch(e){ msg('ann-msg', e.message,'err'); }
+}
+function openAnnouncementEditor(a){
+  $('x-modal-head').textContent = 'Edit Announcement';
+  $('x-fields').innerHTML =
+    '<div class="field"><label>Title</label><input type="text" id="x-title" value="'+esc(a.title||'')+'"></div>'+
+    '<div class="field"><label>Body</label><textarea id="x-body">'+esc(a.body||'')+'</textarea></div>';
+  clearMsg('x-modal-msg');
+  $('x-modal').classList.add('show');
+  $('x-save').onclick = async () => {
+    const patch = { title: $('x-title').value.trim(), body: $('x-body').value.trim() };
+    const b = $('x-save'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Saving…';
+    try { await api('/admin/announcements/'+encodeURIComponent(a.id), { method:'PATCH', body:patch });
+      $('x-modal').classList.remove('show'); loadAnnouncements();
+    } catch(e){ msg('x-modal-msg', e.message,'err'); }
+    b.disabled = false; b.textContent = 'Save changes';
+  };
+}
+
+/* ---------- events ---------- */
+async function loadEvents(){
+  try {
+    const r = await api('/admin/events');
+    const list = r.events || [];
+    if (!list.length){ $('ev-list').innerHTML = '<div class="empty">No events yet.</div>'; return; }
+    $('ev-list').innerHTML = list.map(e =>
+      '<div class="item" data-id="'+esc(e.event_id)+'">'+
+        '<h4>'+esc(e.title||'')+'</h4>'+
+        '<div class="meta">'+esc(e.date||'')+(e.location ? ' · '+esc(e.location):'')+(e.rsvp_open ? ' · <strong style="color:var(--gold)">RSVP open</strong>':'')+'</div>'+
+        (e.description ? '<p>'+esc(e.description)+'</p>' : '')+
+        '<div class="item-actions"><button class="btn btn-ghost btn-sm act-edit">Edit</button>'+
+        '<button class="btn btn-danger btn-sm act-del">Delete</button></div>'+
+      '</div>'
+    ).join('');
+    document.querySelectorAll('#ev-list .item').forEach(el => {
+      const id = el.dataset.id;
+      const ev = list.find(x => x.event_id === id);
+      el.querySelector('.act-edit').onclick = () => openEventEditor(ev);
+      el.querySelector('.act-del').onclick = () => deleteEvent(id);
+    });
+  } catch(e){ $('ev-list').innerHTML = '<div class="empty">'+esc(e.message)+'</div>'; }
+}
+$('btn-ev-post').onclick = async () => {
+  clearMsg('ev-msg');
+  const event = {
+    title: $('e-title').value.trim(), date: $('e-date').value.trim(),
+    location: $('e-loc').value.trim(), description: $('e-desc').value.trim(),
+    rsvp_open: $('e-rsvp').checked
+  };
+  if (!event.title || !event.date) return msg('ev-msg','Title and date required.','err');
+  const b = $('btn-ev-post'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Creating…';
+  try { await api('/admin/events', { method:'POST', body:event });
+    ['e-title','e-date','e-loc','e-desc'].forEach(id => $(id).value = '');
+    $('e-rsvp').checked = false; msg('ev-msg','Event created.','ok'); loadEvents();
+  } catch(e){ msg('ev-msg', e.message,'err'); }
+  b.disabled = false; b.textContent = 'Create event';
+};
+async function deleteEvent(id){
+  if (!confirm('Delete this event?')) return;
+  try { await api('/admin/events/'+encodeURIComponent(id), { method:'DELETE' }); loadEvents(); }
+  catch(e){ msg('ev-msg', e.message,'err'); }
+}
+function openEventEditor(ev){
+  $('x-modal-head').textContent = 'Edit Event';
+  $('x-fields').innerHTML =
+    '<div class="field"><label>Title</label><input type="text" id="x-title" value="'+esc(ev.title||'')+'"></div>'+
+    '<div class="row"><div class="field"><label>Date</label><input type="text" id="x-date" value="'+esc(ev.date||'')+'"></div>'+
+    '<div class="field"><label>Location</label><input type="text" id="x-loc" value="'+esc(ev.location||'')+'"></div></div>'+
+    '<div class="field"><label>Description</label><textarea id="x-desc">'+esc(ev.description||'')+'</textarea></div>'+
+    '<div class="check"><input type="checkbox" id="x-rsvp"'+(ev.rsvp_open?' checked':'')+'><label for="x-rsvp">RSVP open</label></div>';
+  clearMsg('x-modal-msg');
+  $('x-modal').classList.add('show');
+  $('x-save').onclick = async () => {
+    const patch = { title: $('x-title').value.trim(), date: $('x-date').value.trim(),
+      location: $('x-loc').value.trim(), description: $('x-desc').value.trim(), rsvp_open: $('x-rsvp').checked };
+    const b = $('x-save'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Saving…';
+    try { await api('/admin/events/'+encodeURIComponent(ev.event_id), { method:'PATCH', body:patch });
+      $('x-modal').classList.remove('show'); loadEvents();
+    } catch(e){ msg('x-modal-msg', e.message,'err'); }
+    b.disabled = false; b.textContent = 'Save changes';
+  };
+}
+$('x-cancel').onclick = () => $('x-modal').classList.remove('show');
+
+/* ---------- settings ---------- */
+async function loadSettings(){
+  try {
+    const r = await api('/admin/settings');
+    const s = r.settings || {};
+    $('set-ann').checked = !!s.announcements_enabled;
+    $('set-bday').checked = !!s.birthdays_enabled;
+    $('set-yt').checked = !!s.youtube_enabled;
+    $('set-yt-title').value = s.youtube_title || '';
+    $('set-yt-url').value = s.youtube_url || '';
+  } catch(e){ msg('set-msg', e.message,'err'); }
+}
+$('btn-set-save').onclick = async () => {
+  clearMsg('set-msg');
+  const patch = {
+    announcements_enabled: $('set-ann').checked,
+    birthdays_enabled: $('set-bday').checked,
+    youtube_enabled: $('set-yt').checked,
+    youtube_title: $('set-yt-title').value.trim(),
+    youtube_url: $('set-yt-url').value.trim(),
+  };
+  const b = $('btn-set-save'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Saving…';
+  try { await api('/admin/settings', { method:'PATCH', body:patch }); msg('set-msg','Settings saved.','ok'); }
+  catch(e){ msg('set-msg', e.message,'err'); }
+  b.disabled = false; b.textContent = 'Save settings';
+};
+
+/* ---------- memorials ---------- */
+async function loadMemorials(){
+  try {
+    const r = await api('/memorials');
+    const list = r.memorials || [];
+    if (!list.length){ $('mem-list').innerHTML = '<div class="empty">No memorials posted yet.</div>'; return; }
+    $('mem-list').innerHTML = list.map(m =>
+      '<div class="item" data-id="'+esc(m.id)+'">'+
+        '<h4>'+esc(m.name||'')+(m.locked?' <span class="status-pill st-pending" style="font-size:10px;margin-left:6px">🔒 LOCKED</span>':'')+'</h4>'+
+        '<div class="meta">By '+esc(m.author_name||m.author_email||'')+' · '+esc(m.created||'')+'</div>'+
+        (m.tribute ? '<p>'+esc(m.tribute.slice(0,180))+(m.tribute.length>180?'…':'')+'</p>' : '')+
+        '<div class="item-actions">'+
+          '<button class="btn '+(m.locked?'btn-ghost':'btn-gold')+' btn-sm act-lock">'+(m.locked?'Unlock':'Lock')+'</button>'+
+          '<button class="btn btn-danger btn-sm act-del">Delete</button>'+
+        '</div>'+
+      '</div>'
+    ).join('');
+    document.querySelectorAll('#mem-list .item').forEach(el => {
+      const id = el.dataset.id;
+      const m = list.find(x => x.id === id);
+      el.querySelector('.act-lock').onclick = () => toggleMemorialLock(id, !m.locked);
+      el.querySelector('.act-del').onclick = () => deleteMemorial(id);
+    });
+  } catch(e){ $('mem-list').innerHTML = '<div class="empty">'+esc(e.message)+'</div>'; }
+}
+async function toggleMemorialLock(id, locked){
+  try { await api('/memorials/'+encodeURIComponent(id)+'/lock', { method:'POST', body:{ locked } }); loadMemorials(); }
+  catch(e){ msg('mem-msg', e.message,'err'); }
+}
+async function deleteMemorial(id){
+  if (!confirm('Delete this memorial permanently?')) return;
+  try { await api('/memorials/'+encodeURIComponent(id), { method:'DELETE' }); loadMemorials(); }
+  catch(e){ msg('mem-msg', e.message,'err'); }
+}
+
+/* ---------- init ---------- */
+(function init(){
+  if (token()) boot();
+  else show('login');
+})();
+</script>
+</body>
+</html>
